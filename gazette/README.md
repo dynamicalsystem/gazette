@@ -1,3 +1,3 @@
-# dynamicalsystem.halogen
+# dynamicalsystem.gazette
 
-This is the uv workspace for [dynamicalsystem.gazette](https://github.com/DynamicalSystem/halogen/blob/main/gazette/README.md)
+A POSSE publishing system which consumes micro-blogging content from json files, formats it for Bluesky and Signal.
