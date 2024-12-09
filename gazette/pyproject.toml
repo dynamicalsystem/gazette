@@ -1,0 +1,30 @@
+[project]
+name = "gazette"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Simon Horrobin", bluesky = "@dynamicalsystem" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "atproto>=0.0.56",
+    "dynamicalsystem-halogen>=0.1.2",
+    "requests>=2.32.3",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "License :: OSI Approved :: MIT License",
+]
+
+[project.scripts]
+gazette = "dynamicalsystem.gazette:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dynamicalsystem"]
