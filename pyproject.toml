@@ -5,18 +5,23 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "gazette",
+    "dynamicalsystem-pytests",
 ]
 
 [tool.uv.workspace]
-members = ["gazette", "pytests"]
+members = [
+    "dynamicalsystem.gazette",
+    "dynamicalsystem.pytests",
+]
 
 [tool.uv.sources]
 gazette = { workspace = true }
 pytests = { workspace = true }
+dynamicalsystem-pytests = { path = "pytests", editable = true }
 
 [dependency-groups]
 dev = [
     "pytest>=8.3.4",
-    "pytests",
+    "dynamicalsystem.gazette>=0.1.0",
+    "dynamicalsystem.pytests>=0.1.0",
 ]

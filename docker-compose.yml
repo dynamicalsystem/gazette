@@ -1,0 +1,98 @@
+name: dynamicalsystem
+services:
+  poohsticks:
+    image: dynamicalsystem/poohsticks:latest
+    build:
+      args:
+        - HOST_FOLDER=${HOST_FOLDER}
+        - SUBFOLDER=${SUBFOLDER}
+    environment:
+      - TZ=Europe/London
+      - DYNAMICALSYSTEM_ENVIRONMENT=${ENV}
+      - DYNAMICALSYSTEM_FOLDER=/
+      - HOST_FOLDER=${HOST_FOLDER}
+    restart: no
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - kalmanfilter
+    volumes:
+      - "${HOST_FOLDER}/${SUBFOLDER}:/${SUBFOLDER}"
+      #map secrets folder on host system into docker container.
+    depends_on:
+      - signal
+    profiles:
+      - scheduled
+
+  gigbot:
+    image: dynamicalsystem/gigbot:latest
+    build:
+      args:
+        - HOST_FOLDER=${HOST_FOLDER}
+    environment:
+      - DYNAMICAL_SYSTEM_FOLDER=/
+      - TZ=Europe/London
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - kalmanfilter
+    volumes:
+      - "${HOST_FOLDER}/dynamicalsystem.gigbot:/dynamicalsystem.gigbot"
+      #map secrets folder on host system into docker container.
+    depends_on:
+      - signal
+      - redis
+
+  redis:
+    image: redis:latest
+    build:
+      args:
+        - HOST_FOLDER=${HOST_FOLDER}
+        - ENV=${ENV}
+    restart: always
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - "${HOST_FOLDER}/dynamicalsystem.redis.${ENV}:/data"
+    # command: redis-server --requirepass $REDIS_PASSWORD --loglevel <debug | verbose | notice | warning>
+    command: redis-server --loglevel debug --port 6379
+    networks:
+      - kalmanfilter
+    healthcheck:
+      test: [ 'CMD', 'redis-cli', 'ping' ]
+      interval: 240s
+      timeout: 10s
+      retries: 3
+
+  signal:
+    image: bbernhard/signal-cli-rest-api:latest
+    build:
+      args:
+        - HOST_FOLDER=${HOST_FOLDER}
+        - SUBFOLDER=${SUBFOLDER}
+    restart: always
+    environment:
+      - PORT=8010
+      - MODE=json-rpc #supported modes: json-rpc, native, normal
+      #- AUTO_RECEIVE_SCHEDULE=0 22 * * * #enable this parameter on demand (see description below)
+    ports:
+      - "8010:8010" #map docker port 8010 to external port 8010.
+    networks:
+      - kalmanfilter
+    volumes:
+      - "${HOST_FOLDER}/${SUBFOLDER}/signal-cli:/home/.local/share/signal-cli"
+      #map "signal-cli-config" folder on host system into docker container.
+      #the folder contains the password and cryptographic keys when a new number is registered
+
+networks:
+  kalmanfilter:
+    driver: bridge

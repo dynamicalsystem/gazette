@@ -1,4 +1,6 @@
-import dynamicalsystem.poohsticks
+import dynamicalsystem.gazette
+from importlib.metadata import version
 import sys
 
-sys.exit(dynamicalsystem.poohsticks.main())
+print(version('dynamicalsystem.gazette'))
+sys.exit(dynamicalsystem.gazette.main())

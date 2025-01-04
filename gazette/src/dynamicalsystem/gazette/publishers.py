@@ -1,5 +1,6 @@
 import abc
 from atproto import Client
+from atproto.clientutils import TextBuilder
 from re import search
 from requests import get, post, ConnectionError
 from dynamicalsystem.halogen import config_instance
@@ -70,6 +71,32 @@ class Bluesky(Publisher):
     def _formatter(self):
         return super()._formatter()
 
+    def _formatter(self):
+        # This prevents people guessing the verdict by the length of the message
+        # Needs to be not the last line of the message because Signal trims whitespace
+        match self.content.verdict:
+            case "Buy.":
+                verdict = "||Buy.      ||"
+            case "Explore.":
+                verdict = "||Explore.||"
+            case "Ignore.":
+                verdict = "||Ignore.  ||"
+            case _:
+                verdict = self.content.verdict
+
+        tb = TextBuilder()
+        tb.append_bold(possessive(self.content.artist + "\n"))
+        tb.append_italic(self.content.work + "\n")
+        tb.text(self.content.review + "\n")
+        tb.append_spoiler(verdict + "\n")
+        tb.text(f"{self.chart}.{self.placing}")
+
+        return (
+            f"**{possessive(self.content.artist)}** *'{self.content.work}'*\n"
+            f"{self.content.review}\n"
+            f"{verdict}\n"
+            f"{self.chart}.{self.placing}"
+        )
 
 class Signal(Publisher):
     def __init__(self, watermark: Watermark) -> None:
