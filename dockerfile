@@ -1,19 +1,17 @@
 # syntax=docker/dockerfile:1
-FROM python:3.12-alpine
+FROM python:3.13-alpine
 
 # pass in the following build arguments from the makefile
-ARG SUBFOLDER
+ARG NAMESPACE
 ARG SCRIPT
 
 # Install the package
-RUN python -m pip install uv
-RUN mkdir -p /dist
-RUN --mount=source=dist,target=/dist uv pip install --no-cache /dist/*.whl --system
+RUN python -m pip install --no-cache-dir --upgrade ${NAMESPACE}.${SCRIPT}
 
 # Create the image's folder(s)
-RUN echo "Subfolder: ${SUBFOLDER}"
-RUN mkdir -p /${SUBFOLDER}/config
-RUN mkdir -p /${SUBFOLDER}/data
+RUN echo "Subfolder: ${NAMESPACE}"
+RUN mkdir -p /${NAMESPACE}/config
+RUN mkdir -p /${NAMESPACE}/data
 
 # Set image's environment variables
 RUN echo "   Script: ${SCRIPT}"

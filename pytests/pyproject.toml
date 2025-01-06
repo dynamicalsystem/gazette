@@ -12,3 +12,8 @@ dependencies = []
 [project.scripts]
 pytests = "dynamicalsystem.pytests:main"
 
+[dependency-groups]
+dev = [
+    "pytest>=8.3.4",
+]
+

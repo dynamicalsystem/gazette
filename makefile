@@ -5,41 +5,40 @@ NAMESPACE := dynamicalsystem
 PACKAGE_NAME := gazette
 DOCKER_IMAGE := ${NAMESPACE}/$(PACKAGE_NAME)
 HOST_FOLDER := ${HOME}/.local/share
-SUBFOLDER := ${NAMESPACE}
 VERSION := $(shell grep -m 1 version pyproject.toml | grep -e '\d.\d.\d' -o)
 TARBALL := ${NAMESPACE}_${VERSION}.tar.gz
 
 .PHONY:
-	docker_container, sync, test
+	container, publish, sync, test
 
-all: sync test build docker_image
+all: sync test image
 
 build:
-	uv build gazette
+	uv build --wheel --package dynamicalsystem.gazette
 
 check: build
-	uvx twine check gazette/dist/*
+	uvx twine check dist/*
 
 publish: check
-	uvx twine upload gazette/dist/*
+	uvx twine upload dist/*
 
-docker_container:
+containers: image
 	export HOST_FOLDER=${HOST_FOLDER} && \
-	export SUBFOLDER=${SUBFOLDER} && \
+	export SUBFOLDER=${NAMESPACE} && \
 	export ENV=${ENV} && \
 	echo $$HOST_FOLDER $$ENV && \
 	docker compose -f docker-compose.yml up -d
 
 	export HOST_FOLDER=${HOST_FOLDER} && \
-	export SUBFOLDER=${SUBFOLDER} && \
+	export SUBFOLDER=${NAMESPACE} && \
 	export ENV=${ENV} && \
 	echo $$HOST_FOLDER $$ENV && \
-	docker compose -f docker-compose.yml create poohsticks
+	docker compose -f docker-compose.yml create gazette
 
-docker_image:
+image: publish
 	docker build . \
 		--tag $(DOCKER_IMAGE) \
-		--build-arg SUBFOLDER=${SUBFOLDER} \
+		--build-arg NAMESPACE=${NAMESPACE} \
 		--build-arg SCRIPT=${PACKAGE_NAME}
 
 # Create and push a tarball for production

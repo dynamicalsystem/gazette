@@ -1,6 +1,5 @@
 import abc
-from atproto import Client
-from atproto.clientutils import TextBuilder
+from atproto import Client, client_utils
 from re import search
 from requests import get, post, ConnectionError
 from dynamicalsystem.halogen import config_instance
@@ -45,11 +44,11 @@ class Publisher(abc.ABC):
     @abc.abstractmethod
     def _formatter(self):
         return (
-            f"{self.chart}.{self.placing}\n"
-            f'{possessive(self.content.artist)} "{self.content.work}"\n'
-            f"{self.content.review}\n{self.content.verdict}"
+            f"{possessive(self.content.artist)}\n"
+            f"'{self.content.work}'\n"
+            f"{self.content.review}\n"
+            f"{self.chart}.{self.placing} - {self.content.verdict}"
         )
-
 
 class Bluesky(Publisher):
     def __init__(self, watermark: Watermark) -> None:
@@ -64,6 +63,12 @@ class Bluesky(Publisher):
             return False
 
         self._post = self.client.send_post(self._formatter())
+
+        if self.content.verdict == "Buy." and hasattr(self.content, 'url'):
+            reply = client_utils.TextBuilder
+            reply.link('', self.content.url)
+            self._reply = self.client.send_post(text=reply, reply_to=self._post)
+
         self.logger.debug(self._post.uri)
 
         return True
@@ -71,7 +76,7 @@ class Bluesky(Publisher):
     def _formatter(self):
         return super()._formatter()
 
-    def _formatter(self):
+    def _wip_formatter(self):
         # This prevents people guessing the verdict by the length of the message
         # Needs to be not the last line of the message because Signal trims whitespace
         match self.content.verdict:
@@ -85,8 +90,8 @@ class Bluesky(Publisher):
                 verdict = self.content.verdict
 
         tb = TextBuilder()
-        tb.append_bold(possessive(self.content.artist + "\n"))
-        tb.append_italic(self.content.work + "\n")
+        tb.text(possessive(self.content.artist + "\n"))
+        tb.text(self.content.work + "\n")
         tb.text(self.content.review + "\n")
         tb.append_spoiler(verdict + "\n")
         tb.text(f"{self.chart}.{self.placing}")

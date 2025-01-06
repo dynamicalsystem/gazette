@@ -1,6 +1,12 @@
 version = 1
 requires-python = ">=3.13"
 
+[manifest]
+members = [
+    "dynamicalsystem-gazette",
+    "gazette-workspace",
+]
+
 [[package]]
 name = "annotated-types"
 version = "0.7.0"
@@ -12,15 +18,15 @@ wheels = [
 
 [[package]]
 name = "anyio"
-version = "4.7.0"
+version = "4.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "idna" },
     { name = "sniffio" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f6/40/318e58f669b1a9e00f5c4453910682e2d9dd594334539c7b7817dabb765f/anyio-4.7.0.tar.gz", hash = "sha256:2f834749c602966b7d456a7567cafcb309f96482b5081d14ac93ccd457f9dd48", size = 177076 }
+sdist = { url = "https://files.pythonhosted.org/packages/a3/73/199a98fc2dae33535d6b8e8e6ec01f8c1d76c9adb096c6b7d64823038cde/anyio-4.8.0.tar.gz", hash = "sha256:1d9fe889df5212298c0c0723fa20479d1b94883a2df44bd3897aa91083316f7a", size = 181126 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a0/7a/4daaf3b6c08ad7ceffea4634ec206faeff697526421c20f07628c7372156/anyio-4.7.0-py3-none-any.whl", hash = "sha256:ea60c3723ab42ba6fff7e8ccb0488c898ec538ff4df1f1d5e642c3601d07e352", size = 93052 },
+    { url = "https://files.pythonhosted.org/packages/46/eb/e7f063ad1fec6b3178a3cd82d1a3c4de82cccf283fc42746168188e1cdd5/anyio-4.8.0-py3-none-any.whl", hash = "sha256:b5011f270ab5eb0abf13385f851315585cc37ef330dd88e27ec3d34d651fd47a", size = 96041 },
 ]
 
 [[package]]
@@ -156,16 +162,19 @@ wheels = [
 
 [[package]]
 name = "dynamicalsystem-gazette"
-version = "0.1.2"
-source = { registry = "https://pypi.org/simple" }
+version = "0.1.5"
+source = { editable = "gazette" }
 dependencies = [
     { name = "atproto" },
     { name = "dynamicalsystem-halogen" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5f/e4/fa06c299e7bbb0a1093b9aa0e8842437887bbdfe7d72d29f78c5d12a5eaa/dynamicalsystem_gazette-0.1.2.tar.gz", hash = "sha256:b8ecf0f36f0bce8a5173eac1872deb0e9cca8e550e35ebd53e78c649384d4f84", size = 3777 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f6/1e/62f9d7e22e5503973b3e322c5033c7bac632104f3fd85acce9fbb6e396ad/dynamicalsystem_gazette-0.1.2-py3-none-any.whl", hash = "sha256:17e7711cbf4d3483c1a085a44e53ca4cbcd9324362c73e07acf0bf1024937ab0", size = 6245 },
+
+[package.metadata]
+requires-dist = [
+    { name = "atproto", specifier = ">=0.0.56" },
+    { name = "dynamicalsystem-halogen", specifier = ">=0.1.2" },
+    { name = "requests", specifier = ">=2.32.3" },
 ]
 
 [[package]]
@@ -186,13 +195,15 @@ name = "dynamicalsystem-pytests"
 version = "0.1.0"
 source = { editable = "pytests" }
 
+[package.metadata]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=8.3.4" }]
+
 [[package]]
 name = "gazette-workspace"
 version = "0.1.0"
 source = { virtual = "." }
-dependencies = [
-    { name = "dynamicalsystem-pytests" },
-]
 
 [package.dev-dependencies]
 dev = [
@@ -202,11 +213,10 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "dynamicalsystem-pytests", editable = "pytests" }]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "dynamicalsystem-gazette", specifier = ">=0.1.0" },
+    { name = "dynamicalsystem-gazette", editable = "gazette" },
     { name = "dynamicalsystem-pytests", editable = "pytests" },
     { name = "pytest", specifier = ">=8.3.4" },
 ]
