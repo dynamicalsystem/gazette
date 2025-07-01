@@ -10,13 +10,15 @@ echo "Creating directories..."
 mkdir -p ~/.local/share/dynamicalsystem/{config,data}
 
 # Set environment variables
-export DYNAMICALSYSTEM_ENVIRONMENT=${DYNAMICALSYSTEM_ENVIRONMENT:-prod}
+export ENV=${ENV:-prod}
 export HOST_FOLDER=${HOST_FOLDER:-~/.local/share}
+export SUBFOLDER=${SUBFOLDER:-dynamicalsystem}
 export TZ=${TZ:-Europe/London}
 
 echo "Environment settings:"
-echo "  DYNAMICALSYSTEM_ENVIRONMENT: $DYNAMICALSYSTEM_ENVIRONMENT"
+echo "  ENV: $ENV"
 echo "  HOST_FOLDER: $HOST_FOLDER"
+echo "  SUBFOLDER: $SUBFOLDER"
 echo "  TZ: $TZ"
 
 # Deploy containers
