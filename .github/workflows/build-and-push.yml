@@ -24,7 +24,10 @@ jobs:
       DYNAMICALSYSTEM_FOLDER: /tmp
       CONTENT_GITHUB_URL: https://raw.githubusercontent.com/DynamicalSystem/content/main/
       CONTENT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Try direct attribute names too
+      GITHUB_URL: https://raw.githubusercontent.com/DynamicalSystem/content/main/
       WATERMARKS_WATERMARK_FILE: watermarks.prod.json
+      WATERMARK_FILE: watermarks.prod.json
       WATERMARKS_DATA_FOLDER: /tmp/test_data
       PUBLISHERS_BLUESKY_URL: https://bsky.social
       PUBLISHERS_BLUESKY_USERNAME: test_user
