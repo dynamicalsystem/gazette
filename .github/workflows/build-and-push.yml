@@ -21,7 +21,9 @@ jobs:
     env:
       # Halogen configuration for tests
       CONTENT_GITHUB_URL: https://raw.githubusercontent.com/DynamicalSystem/content/main/
+      CONTENT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       WATERMARKS_WATERMARK_FILE: watermarks.prod.json
+      WATERMARKS_DATA_FOLDER: /tmp/test_data
     
     steps:
     - name: Checkout code
