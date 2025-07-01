@@ -1,7 +1,7 @@
 name: dynamicalsystem
 services:
   gazette:
-    image: dynamicalsystem/gazette:latest
+    image: dynamicalsystem.gazette:latest
     build:
       args:
         - HOST_FOLDER=${HOST_FOLDER}
