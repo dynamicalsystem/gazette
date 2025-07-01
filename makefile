@@ -41,16 +41,5 @@ image: publish
 		--build-arg NAMESPACE=${NAMESPACE} \
 		--build-arg SCRIPT=${PACKAGE_NAME}
 
-# Create and push a tarball for production
-production:
-	@echo ${TARBALL}
-	tar czvf prod/$(TARBALL) makefile dist dockerfile docker-compose.yml
-	mkdir -p "/Volumes/Dynamical System’s Public Folder/Drop Box/${NAMESPACE}.${VERSION}"
-	cp prod/$(TARBALL) "/Volumes/Dynamical System’s Public Folder/Drop Box/${NAMESPACE}.${VERSION}"
-	@echo 'tar -xzf ${TARBALL}' on the prod server to extract the tarball
-	@echo 'make docker_image'
-	@echo 'make docker_container ENV=prod'
-
-
 test:
 	pytest --pyargs dynamicalsystem.pytests

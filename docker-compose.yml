@@ -27,52 +27,6 @@ services:
     profiles:
       - scheduled
 
-  gigbot:
-    image: dynamicalsystem/gigbot:latest
-    build:
-      args:
-        - HOST_FOLDER=${HOST_FOLDER}
-    environment:
-      - DYNAMICAL_SYSTEM_FOLDER=/
-      - TZ=Europe/London
-    restart: always
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    networks:
-      - kalmanfilter
-    volumes:
-      - "${HOST_FOLDER}/dynamicalsystem.gigbot:/dynamicalsystem.gigbot"
-      #map secrets folder on host system into docker container.
-    depends_on:
-      - signal
-      - redis
-
-  redis:
-    image: redis:latest
-    build:
-      args:
-        - HOST_FOLDER=${HOST_FOLDER}
-        - ENV=${ENV}
-    restart: always
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
-    ports:
-      - "6379:6379"
-    volumes:
-      - "${HOST_FOLDER}/dynamicalsystem.redis.${ENV}:/data"
-    # command: redis-server --requirepass $REDIS_PASSWORD --loglevel <debug | verbose | notice | warning>
-    command: redis-server --loglevel debug --port 6379
-    networks:
-      - kalmanfilter
-    healthcheck:
-      test: [ 'CMD', 'redis-cli', 'ping' ]
-      interval: 240s
-      timeout: 10s
-      retries: 3
-
   signal:
     image: bbernhard/signal-cli-rest-api:latest
     build:
