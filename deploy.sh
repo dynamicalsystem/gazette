@@ -23,7 +23,10 @@ echo "  TZ: $TZ"
 
 # Deploy containers
 echo "Deploying containers..."
+# Start signal service
 docker compose up -d
+# Create gazette container without starting it
+docker compose --profile scheduled create gazette
 
 echo "Deployment complete!"
 echo "Note: Don't forget to add your configuration files to $HOST_FOLDER/dynamicalsystem/config/"
