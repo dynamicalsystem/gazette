@@ -20,16 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Halogen configuration for tests
-      DYNAMICALSYSTEM_GITHUB_URL: https://api.github.com
-      DYNAMICALSYSTEM_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      DYNAMICALSYSTEM_DATA_FOLDER: /tmp/test_data
-      DYNAMICALSYSTEM_WATERMARK_FILE: watermarks.json
-      DYNAMICALSYSTEM_BLUESKY_URL: https://bsky.social
-      DYNAMICALSYSTEM_BLUESKY_USERNAME: test_user
-      DYNAMICALSYSTEM_BLUESKY_PASSWORD: test_password
-      DYNAMICALSYSTEM_SIGNAL_URL: http://localhost:8080
-      DYNAMICALSYSTEM_SIGNAL_IDENTITY: "+1234567890"
-      DYNAMICALSYSTEM_SIGNAL_PHONE_NUMBER: "+1234567890"
+      CONTENT_GITHUB_URL: https://raw.githubusercontent.com/DynamicalSystem/content/main/
+      WATERMARKS_WATERMARK_FILE: watermarks.prod.json
     
     steps:
     - name: Checkout code
