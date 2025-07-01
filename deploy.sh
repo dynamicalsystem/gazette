@@ -21,7 +21,7 @@ echo "  TZ: $TZ"
 
 # Deploy containers
 echo "Deploying containers..."
-docker-compose up -d
+docker compose up -d
 
 echo "Deployment complete!"
 echo "Note: Don't forget to add your configuration files to $HOST_FOLDER/dynamicalsystem/config/"
