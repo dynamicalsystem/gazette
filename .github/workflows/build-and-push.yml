@@ -20,10 +20,18 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Halogen configuration for tests
+      DYNAMICALSYSTEM_ENVIRONMENT: pytest
+      DYNAMICALSYSTEM_FOLDER: /tmp
       CONTENT_GITHUB_URL: https://raw.githubusercontent.com/DynamicalSystem/content/main/
       CONTENT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       WATERMARKS_WATERMARK_FILE: watermarks.prod.json
       WATERMARKS_DATA_FOLDER: /tmp/test_data
+      PUBLISHERS_BLUESKY_URL: https://bsky.social
+      PUBLISHERS_BLUESKY_USERNAME: test_user
+      PUBLISHERS_BLUESKY_PASSWORD: test_password
+      PUBLISHERS_SIGNAL_URL: http://localhost:8080
+      PUBLISHERS_SIGNAL_IDENTITY: "+1234567890"
+      PUBLISHERS_SIGNAL_PHONE_NUMBER: "+1234567890"
     
     steps:
     - name: Checkout code
