@@ -56,7 +56,13 @@ jobs:
     
     - name: Run tests
       run: |
-        uv run pytest --pyargs dynamicalsystem.pytests
+        # Enable verbose logging
+        export PYTHONUNBUFFERED=1
+        # Show environment variables for debugging
+        echo "Environment variables:"
+        env | grep -E "(DYNAMICALSYSTEM|CONTENT|WATERMARKS|PUBLISHERS|GITHUB)" | sort
+        # Run tests with verbose output
+        uv run pytest --pyargs dynamicalsystem.pytests -v -s --tb=short
     
     - name: Build package
       run: |
