@@ -19,7 +19,7 @@ jobs:
   build-python:
     runs-on: ubuntu-latest
     env:
-      # Halogen configuration for tests (updated dependency v3)
+      # Halogen configuration for tests (updated dependency v4)
       DYNAMICALSYSTEM_ENVIRONMENT: pytest
       DYNAMICALSYSTEM_FOLDER: /tmp
       CONTENT_GITHUB_URL: https://raw.githubusercontent.com/DynamicalSystem/content/main/
