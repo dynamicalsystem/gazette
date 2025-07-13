@@ -6,7 +6,7 @@ def test_watermark_file_exists(environment_variables):
     from dynamicalsystem.gazette.watermarks import Watermark
     
     _ = Watermark("signal_to_abyss")
-    _.logger.info(f"Environment is '{environ.get("DYNAMICALSYSTEM_ENVIRONMENT", "unknown")}'")
+    _.logger.info(f'Environment is \'{environ.get("DYNAMICALSYSTEM_ENVIRONMENT", "unknown")}\'')
     
     assert exists(_.watermark_file), f"Watermark file '{_.watermark_file}' does not exist"
 
