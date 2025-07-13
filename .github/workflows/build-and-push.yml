@@ -48,11 +48,14 @@ jobs:
         cat > /home/runner/.local/share/dynamicalsystem/config/gazette.pytest.env << 'EOF'
         CONTENT_GITHUB_URL=https://raw.githubusercontent.com/DynamicalSystem/content/main/
         CONTENT_GITHUB_TOKEN=${{ secrets.CONTENT_GITHUB_TOKEN }}
+        PUBLISHERS_BLUESKY_URL=https://bsky.social
         WATERMARKS_WATERMARK_FILE=watermarks.pytests.json
         EOF
         # Create dynamicalsystem.pytest.env
         cat > /home/runner/.local/share/dynamicalsystem/config/dynamicalsystem.pytest.env << 'EOF'
         LOG_SIGNAL_IDENTITY=${{ secrets.LOG_SIGNAL_IDENTITY }}
+        LOG_SIGNAL_TARGET=${{ secrets.LOG_SIGNAL_TARGET }}
+        LOG_SIGNAL_URL=http://localhost:8010/v2/send
         LOG_LEVEL=DEBUG
         EOF
         # Create data directory
