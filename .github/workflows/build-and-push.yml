@@ -50,7 +50,9 @@ jobs:
         CONTENT_GITHUB_TOKEN=${{ secrets.CONTENT_GITHUB_TOKEN }}
         PUBLISHERS_BLUESKY_URL=https://bsky.social
         PUBLISHERS_BLUESKY_USERNAME=${{ secrets.PUBLISHERS_BLUESKY_USERNAME }}
+        PUBLISHERS_BLUESKY_PASSWORD=${{ secrets.PUBLISHERS_BLUESKY_PASSWORD }}
         PUBLISHERS_SIGNAL_URL=${{ secrets.PUBLISHERS_SIGNAL_URL }}
+        PUBLISHERS_SIGNAL_IDENTITY=${{ secrets.LOG_SIGNAL_TARGET }}
         WATERMARKS_WATERMARK_FILE=watermarks.pytests.json
         EOF
         # Create dynamicalsystem.pytest.env
