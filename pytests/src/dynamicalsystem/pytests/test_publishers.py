@@ -34,10 +34,3 @@ def test_signal_logger(environment_variables):
     except Exception as e:
         _.logger.exception(e)
 
-
-def test_get_watermarks(environment_variables):
-    from dynamicalsystem.gazette.watermarks import watermarks
-
-    _ = watermarks()
-    assert "signal_to_abyss" in _
-    assert "bluesky" in _

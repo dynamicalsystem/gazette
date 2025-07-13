@@ -33,6 +33,7 @@ class GitHub:
 
             self.item = item
         else:
+            self.logger.error("{response.text} {response.url}")
             self.item = None        
 
     def validate_content(self):

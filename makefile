@@ -42,4 +42,4 @@ image: publish
 		--build-arg SCRIPT=${PACKAGE_NAME}
 
 test:
-	pytest --pyargs dynamicalsystem.pytests
+	uv run pytest --pyargs dynamicalsystem.pytests
