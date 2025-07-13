@@ -47,11 +47,12 @@ jobs:
         # Create gazette.pytest.env
         cat > /home/runner/.local/share/dynamicalsystem/config/gazette.pytest.env << 'EOF'
         CONTENT_GITHUB_URL=https://raw.githubusercontent.com/DynamicalSystem/content/main/
-        CONTENT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+        CONTENT_GITHUB_TOKEN=${{ secrets.CONTENT_GITHUB_TOKEN }}
         WATERMARKS_WATERMARK_FILE=watermarks.pytests.json
         EOF
         # Create dynamicalsystem.pytest.env
         cat > /home/runner/.local/share/dynamicalsystem/config/dynamicalsystem.pytest.env << 'EOF'
+        LOG_SIGNAL_IDENTITY=${{ secrets.LOG_SIGNAL_IDENTITY }}
         LOG_LEVEL=DEBUG
         EOF
         # Create data directory
@@ -62,7 +63,7 @@ jobs:
             "publisher": "Signal",
             "chart": "test",
             "placing": 32,
-            "target": "group.V2tGenI0ODlObEtETk1nTWNtendCZjNySG5mNHNYSFdFUGFOUk9QamhWbz0="
+            "target": "${{ secrets.LOG_SIGNAL_TARGET }}"
           },
           "bluesky": {
             "publisher": "Bluesky",

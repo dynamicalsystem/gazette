@@ -9,3 +9,7 @@
 ## Operation
 
 `make test` will run the tests.
+
+## CI/CD
+
+There is a `github/workflow` which uses the config files.  These are created on push by `.github/workflows/build-and-push.yml`. Ensure the secrets are stored properly in githuib secrets... `CONTENT_GITHUB_TOKEN` and `LOG_SIGNAL_IDENTITY`
