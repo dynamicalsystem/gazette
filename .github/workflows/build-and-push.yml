@@ -21,20 +21,7 @@ jobs:
     env:
       # Halogen configuration for tests (updated dependency v4)
       DYNAMICALSYSTEM_ENVIRONMENT: pytest
-      DYNAMICALSYSTEM_FOLDER: /tmp
-      CONTENT_GITHUB_URL: https://raw.githubusercontent.com/DynamicalSystem/content/main/
-      CONTENT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # Try direct attribute names too
-      GITHUB_URL: https://raw.githubusercontent.com/DynamicalSystem/content/main/
-      WATERMARKS_WATERMARK_FILE: watermarks.prod.json
-      WATERMARK_FILE: watermarks.prod.json
-      WATERMARKS_DATA_FOLDER: /tmp/test_data
-      PUBLISHERS_BLUESKY_URL: https://bsky.social
-      PUBLISHERS_BLUESKY_USERNAME: test_user
-      PUBLISHERS_BLUESKY_PASSWORD: test_password
-      PUBLISHERS_SIGNAL_URL: http://localhost:8080
-      PUBLISHERS_SIGNAL_IDENTITY: "+1234567890"
-      PUBLISHERS_SIGNAL_PHONE_NUMBER: "+1234567890"
+      DYNAMICALSYSTEM_FOLDER: /home/runner/.local/share
     
     steps:
     - name: Checkout code
@@ -53,6 +40,38 @@ jobs:
     - name: Install dependencies
       run: |
         uv sync --all-extras --dev
+    
+    - name: Create config directory and files
+      run: |
+        mkdir -p /home/runner/.local/share/dynamicalsystem/config
+        # Create gazette.pytest.env
+        cat > /home/runner/.local/share/dynamicalsystem/config/gazette.pytest.env << 'EOF'
+        CONTENT_GITHUB_URL=https://raw.githubusercontent.com/DynamicalSystem/content/main/
+        CONTENT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+        WATERMARKS_WATERMARK_FILE=watermarks.pytests.json
+        EOF
+        # Create dynamicalsystem.pytest.env
+        cat > /home/runner/.local/share/dynamicalsystem/config/dynamicalsystem.pytest.env << 'EOF'
+        LOG_LEVEL=DEBUG
+        EOF
+        # Create data directory
+        mkdir -p /home/runner/.local/share/dynamicalsystem/data
+        cat > /home/runner/.local/share/dynamicalsystem/data/watermarks.pytests.env << 'EOF'
+        {
+          "signal_to_abyss": {
+            "publisher": "Signal",
+            "chart": "test",
+            "placing": 32,
+            "target": "group.V2tGenI0ODlObEtETk1nTWNtendCZjNySG5mNHNYSFdFUGFOUk9QamhWbz0="
+          },
+          "bluesky": {
+            "publisher": "Bluesky",
+            "chart": "test",
+            "placing": 32,
+            "target": "test"
+          }
+        }
+        EOF
     
     - name: Run tests
       run: |
