@@ -56,7 +56,7 @@ jobs:
         EOF
         # Create data directory
         mkdir -p /home/runner/.local/share/dynamicalsystem/data
-        cat > /home/runner/.local/share/dynamicalsystem/data/watermarks.pytests.env << 'EOF'
+        cat > /home/runner/.local/share/dynamicalsystem/data/watermarks.pytests.json << 'EOF'
         {
           "signal_to_abyss": {
             "publisher": "Signal",
