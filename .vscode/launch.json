@@ -1,0 +1,19 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "module: gazette",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "dynamicalsystem.gazette",
+            "env": {
+                "DYNAMICALSYSTEM_ENVIRONMENT": "pytest",
+                "DYNAMICALSYSTEM_FOLDER": "/Users/dynamicalsystem/.local/share"
+            }
+        }
+    ]
+}

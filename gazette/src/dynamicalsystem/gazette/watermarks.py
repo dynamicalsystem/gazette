@@ -35,7 +35,7 @@ class Watermark:
             watermarks[self.name]["placing"] = self.placing
 
             with open(self.watermark_file, "w") as f:
-                dump(watermarks, f)
+                dump(watermarks, f, indent=4)
 
         except FileNotFoundError:
             self.logger.exception(f"{self.watermark_file} not found.")
