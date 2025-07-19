@@ -3,7 +3,7 @@
 
 # Download docker-compose.yml
 echo "Downloading docker-compose.yml..."
-curl -O https://raw.githubusercontent.com/dynamicalsystem/gazette/main/docker-compose.yml
+curl -H 'Cache-Control: no-cache' -O https://raw.githubusercontent.com/dynamicalsystem/gazette/main/docker-compose.yml
 
 # Create necessary directories
 echo "Creating directories..."
