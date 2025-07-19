@@ -50,3 +50,8 @@ services:
 networks:
   kalmanfilter:
     driver: bridge
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
+        - subnet: fd:15:f0:d::/64

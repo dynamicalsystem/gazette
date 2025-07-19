@@ -21,6 +21,18 @@ echo "  HOST_FOLDER: $HOST_FOLDER"
 echo "  SUBFOLDER: $SUBFOLDER"
 echo "  TZ: $TZ"
 
+# Create .env file for docker-compose
+echo "Creating .env file..."
+cat > .env << EOF
+ENV=${ENV}
+HOST_FOLDER=${HOST_FOLDER}
+SUBFOLDER=${SUBFOLDER}
+TZ=${TZ}
+EOF
+
+echo "Created .env file with:"
+cat .env
+
 # Deploy containers
 echo "Deploying containers..."
 # Start signal service
