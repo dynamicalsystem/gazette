@@ -6,6 +6,15 @@ echo "Downloading docker-compose.yml..."
 curl -H 'Cache-Control: no-cache' -O https://raw.githubusercontent.com/dynamicalsystem/gazette/main/docker-compose.yml
 
 # Create necessary directories
+# Put config on NAS...
+# echo "username=<USERANME>
+# password=<PASSWORD>
+# domain=WORKGROUP" | sudo tee -a /etc/samba/credentials
+# sudo chmod 600 /etc/samba/credentials
+# sudo mkdir -p /mnt/home
+# sudo mount -t cifs //<NAS>.local/home /mnt/home -o username=<USERNAME>
+# echo "//<NAS>.local/home /mnt/home cifs credentials=/etc/samba/credentials,uid=1000,gid=1000,iocharset=utf8 0 0" | sudo tee -a /etc/fstab
+
 echo "Creating directories..."
 mkdir -p ~/.local/share/dynamicalsystem/{config,data}
 
