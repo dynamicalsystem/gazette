@@ -7,7 +7,7 @@ This is the uv workspace for [dynamicalsystem.gazette](https://github.com/Dynami
 To quickly deploy gazette to a Docker host:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/dynamicalsystem/gazette/main/deploy.sh | bash
+curl -H 'Cache-Control: no-cache' -sSL https://raw.githubusercontent.com/dynamicalsystem/gazette/main/deploy.sh | bash
 ```
 
 Or download and review the script first:
