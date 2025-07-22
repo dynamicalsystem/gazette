@@ -2,6 +2,7 @@ name: dynamicalsystem
 services:
   gazette:
     image: dynamicalsystem/gazette:latest
+    container_name: gazette
     build:
       args:
         - HOST_FOLDER=${HOST_FOLDER}
@@ -22,6 +23,7 @@ services:
     volumes:
       - "${HOST_FOLDER}/${SUBFOLDER}:/${SUBFOLDER}"
       #map secrets folder on host system into docker container.
+    user: "1000:1000"
     depends_on:
       - signal
     profiles:
@@ -29,6 +31,7 @@ services:
 
   signal:
     image: bbernhard/signal-cli-rest-api:latest
+    container_name: signal
     build:
       args:
         - HOST_FOLDER=${HOST_FOLDER}
@@ -46,6 +49,7 @@ services:
       - "${HOST_FOLDER}/${SUBFOLDER}/signal-cli:/home/.local/share/signal-cli"
       #map "signal-cli-config" folder on host system into docker container.
       #the folder contains the password and cryptographic keys when a new number is registered
+    user: "1000:1000"
 
 networks:
   kalmanfilter:

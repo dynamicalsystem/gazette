@@ -12,8 +12,9 @@ curl -H 'Cache-Control: no-cache' -O https://raw.githubusercontent.com/dynamical
 # domain=WORKGROUP" | sudo tee -a /etc/samba/credentials
 # sudo chmod 600 /etc/samba/credentials
 # sudo mkdir -p /mnt/home
+# Following line assumes docker container is in gid 1000
 # sudo mount -t cifs //<NAS>.local/home /mnt/home -o username=<USERNAME>
-# echo "//<NAS>.local/home /mnt/home cifs credentials=/etc/samba/credentials,uid=1000,gid=1000,iocharset=utf8 0 0" | sudo tee -a /etc/fstab
+# echo "//<NAS>.local/home /mnt/home cifs credentials=/etc/samba/credentials,uid=1000,gid=1000,iocharset=utf8,file_mode=0777,dir_mode=0777,noperm 0 0" | sudo tee -a /etc/fstab
 
 echo "Creating directories..."
 mkdir -p ~/.local/share/dynamicalsystem/{config,data}
