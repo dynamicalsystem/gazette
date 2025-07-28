@@ -39,6 +39,7 @@ services:
     environment:
       - PORT=8010
       - MODE=json-rpc #supported modes: json-rpc, native, normal
+      - LOG_LEVEL=DEBUG
       #- AUTO_RECEIVE_SCHEDULE=0 22 * * * #enable this parameter on demand (see description below)
     ports:
       - "8010:8010" #map docker port 8010 to external port 8010.
