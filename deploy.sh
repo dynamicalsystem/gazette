@@ -23,9 +23,15 @@ else
     export SIGNAL_PORT=8010
 fi
 
+# Set user ID for container
+export CONTAINER_UID=$(id -u)
+export CONTAINER_GID=$(id -g)
+
 echo "Environment settings:"
 echo "  ENV: $ENV"
 echo "  SIGNAL_PORT: $SIGNAL_PORT"
+echo "  CONTAINER_UID: $CONTAINER_UID"
+echo "  CONTAINER_GID: $CONTAINER_GID"
 echo "  HOST_FOLDER: $HOST_FOLDER"
 echo "  SUBFOLDER: $SUBFOLDER"
 echo "  TZ: $TZ"
@@ -39,6 +45,8 @@ HOST_FOLDER=${HOST_FOLDER}
 SUBFOLDER=${SUBFOLDER}
 TZ=${TZ}
 SIGNAL_PORT=${SIGNAL_PORT}
+CONTAINER_UID=${CONTAINER_UID}
+CONTAINER_GID=${CONTAINER_GID}
 EOF
 
 echo "Created .env file with:"
