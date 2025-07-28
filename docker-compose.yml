@@ -36,10 +36,13 @@ services:
         - HOST_FOLDER=${HOST_FOLDER}
         - SUBFOLDER=${SUBFOLDER}
     restart: always
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     environment:
       - PORT=8010
       - MODE=json-rpc #supported modes: json-rpc, native, normal
-      - LOG_LEVEL=DEBUG
+      - LOG_LEVEL=debug
       - SIGNAL_CLI_UID=${CONTAINER_UID}
       - SIGNAL_CLI_GID=${CONTAINER_GID}
       #- AUTO_RECEIVE_SCHEDULE=0 22 * * * #enable this parameter on demand (see description below)
