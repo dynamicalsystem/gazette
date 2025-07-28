@@ -10,7 +10,8 @@ echo "Creating directories..."
 mkdir -p ~/.local/share/dynamicalsystem/{config,data}
 
 # Set environment variables
-export ENV=${ENV:-prod}
+export DYNAMICAL_SYSTEM_FOLDER=${DYNAMICAL_SYSTEM_FOLDER:~/.local/share/dynamicalsystem}
+export ENV=${DYNAMICAL_SYSTEM_ENVIRONMENT:-prod}
 export HOST_FOLDER=${HOST_FOLDER:-~/.local/share}
 export SUBFOLDER=${SUBFOLDER:-dynamicalsystem}
 export TZ=${TZ:-Europe/London}
@@ -24,7 +25,8 @@ echo "  TZ: $TZ"
 # Create .env file for docker-compose
 echo "Creating .env file..."
 cat > .env << EOF
-ENV=${ENV}
+ENV=${DYNAMICAL_SYSTEM_ENVIRONMENT}
+DYNAMICAL_SYSTEM_FOLDER=${DYNAMICAL_SYSTEM_FOLDER}
 HOST_FOLDER=${HOST_FOLDER}
 SUBFOLDER=${SUBFOLDER}
 TZ=${TZ}
@@ -41,4 +43,4 @@ docker compose up -d
 docker compose --profile scheduled create gazette
 
 echo "Deployment complete!"
-echo "Note: Don't forget to add your configuration files to $HOST_FOLDER/dynamicalsystem/config/"
+echo "Note: Don't forget to add your configuration files to ${DYNAMICAL_SYSTEM_ENVIRONMENT}/config/"
