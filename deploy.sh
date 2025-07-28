@@ -16,8 +16,16 @@ export HOST_FOLDER=${HOST_FOLDER:-~/.local/share}
 export SUBFOLDER=${SUBFOLDER:-dynamicalsystem}
 export TZ=${TZ:-Europe/London}
 
+# Set port based on environment
+if [ "$DYNAMICAL_SYSTEM_ENVIRONMENT" = "test" ]; then
+    export SIGNAL_PORT=8110
+else
+    export SIGNAL_PORT=8010
+fi
+
 echo "Environment settings:"
 echo "  ENV: $ENV"
+echo "  SIGNAL_PORT: $SIGNAL_PORT"
 echo "  HOST_FOLDER: $HOST_FOLDER"
 echo "  SUBFOLDER: $SUBFOLDER"
 echo "  TZ: $TZ"
@@ -30,6 +38,7 @@ DYNAMICAL_SYSTEM_FOLDER=${DYNAMICAL_SYSTEM_FOLDER}
 HOST_FOLDER=${HOST_FOLDER}
 SUBFOLDER=${SUBFOLDER}
 TZ=${TZ}
+SIGNAL_PORT=${SIGNAL_PORT}
 EOF
 
 echo "Created .env file with:"
@@ -43,4 +52,4 @@ docker compose up -d
 docker compose --profile scheduled create gazette
 
 echo "Deployment complete!"
-echo "Note: Don't forget to add your configuration files to ${DYNAMICAL_SYSTEM_FODLER}/config/"
+echo "Note: Don't forget to add your configuration files to ${DYNAMICAL_SYSTEM_FOLDER}config/"
