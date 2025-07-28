@@ -43,4 +43,4 @@ docker compose up -d
 docker compose --profile scheduled create gazette
 
 echo "Deployment complete!"
-echo "Note: Don't forget to add your configuration files to ${DYNAMICAL_SYSTEM_ENVIRONMENT}/config/"
+echo "Note: Don't forget to add your configuration files to ${DYNAMICAL_SYSTEM_FODLER}/config/"
