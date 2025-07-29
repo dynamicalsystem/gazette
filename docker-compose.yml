@@ -40,8 +40,8 @@ services:
       - PORT=8010
       - MODE=json-rpc #supported modes: json-rpc, native, normal
       - LOG_LEVEL=debug
-      - SIGNAL_CLI_UID=${CONTAINER_UID}
-      - SIGNAL_CLI_GID=${CONTAINER_GID}
+      - SIGNAL_CLI_UID=0  # Set to 0 for rootless docker
+      - SIGNAL_CLI_GID=0
       #- AUTO_RECEIVE_SCHEDULE=0 22 * * * #enable this parameter on demand (see description below)
     ports:
       - "${SIGNAL_PORT}:8010" #map docker port 8010 to external port ${SIGNAL_PORT}.
