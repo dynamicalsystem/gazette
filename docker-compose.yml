@@ -47,7 +47,9 @@ services:
     networks:
       - kalmanfilter
     volumes:
-      - "${HOST_FOLDER}/${SUBFOLDER}/signal-cli:/home/.local/share/signal-cli"
+      - "${HOME}/local-signal-cli:/home/.local/share/signal-cli"
+      # Original SMB mount (commented for testing): 
+      # - "${HOST_FOLDER}/${SUBFOLDER}/signal-cli:/home/.local/share/signal-cli"
       #map "signal-cli-config" folder on host system into docker container.
       #the folder contains the password and cryptographic keys when a new number is registered
 
