@@ -36,9 +36,6 @@ services:
         - HOST_FOLDER=${HOST_FOLDER}
         - SUBFOLDER=${SUBFOLDER}
     restart: always
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
     environment:
       - PORT=8010
       - MODE=json-rpc #supported modes: json-rpc, native, normal
@@ -58,8 +55,3 @@ services:
 networks:
   kalmanfilter:
     driver: bridge
-    enable_ipv6: true
-    ipam:
-      config:
-        - subnet: 172.18.0.0/16
-        - subnet: fd:15:f0:d::/64
