@@ -40,11 +40,11 @@ services:
       - PORT=8010
       - MODE=json-rpc #supported modes: json-rpc, native, normal
       - LOG_LEVEL=debug
-      - SIGNAL_CLI_UID=1003
-      - SIGNAL_CLI_GID=1003
+      - SIGNAL_CLI_UID=${CONTAINER_UID}
+      - SIGNAL_CLI_GID=${CONTAINER_GID}
       # Don't set SIGNAL_CLI_UID/GID for rootless docker
     ports:
-      - "${SIGNAL_PORT}:8010" #map docker port 8010 to external port ${SIGNAL_PORT}.
+      - "${SIGNAL_PORT}:8080" #map container port 8080 to host port ${SIGNAL_PORT}.
     networks:
       - kalmanfilter
     volumes:
