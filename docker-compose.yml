@@ -37,7 +37,7 @@ services:
         - SUBFOLDER=${SUBFOLDER}
     restart: always
     environment:
-      - PORT=8010
+      - PORT=8080
       - MODE=json-rpc #supported modes: json-rpc, native, normal
       - LOG_LEVEL=debug
       - SIGNAL_CLI_UID=${CONTAINER_UID}
