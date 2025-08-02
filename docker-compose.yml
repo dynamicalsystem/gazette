@@ -52,8 +52,8 @@ services:
       - type: bind
         source: ${HOST_FOLDER}/${SUBFOLDER}/signal-cli
         target: /home/.local/share/signal-cli
-      bind:
-        create_host_path: false
+        bind:
+          create_host_path: false
 
 networks:
   kalmanfilter:
