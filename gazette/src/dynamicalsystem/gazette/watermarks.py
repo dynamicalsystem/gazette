@@ -63,7 +63,7 @@ class Watermark:
 
         self.publisher = mark.get("publisher") or ""
         self.chart = mark.get("chart") or ""
-        self.placing = mark.get("placing") or ""
+        self.placing = mark.get("placing", 0)
         self.target = mark.get("target") or ""
 
         self._log_watermark("Loaded watermark")

@@ -11,6 +11,8 @@ from dynamicalsystem.gazette.watermarks import Watermark
 
 def create_publisher(watermark: str):
     w = Watermark(watermark)
+    if w.placing <= 0:
+        raise ValueError(f"Chart complete for {watermark} (placing={w.placing})")
     _class = globals()[w.publisher]  # todo: this is a bit of a hack
 
     return _class(w)
