@@ -2,9 +2,9 @@ import abc
 from atproto import Client, client_utils
 from re import search
 from requests import get, post, ConnectionError
-from dynamicalsystem.halogen import config_instance
-from dynamicalsystem.halogen import logger
-from dynamicalsystem.halogen.utils import cli_hyperlink, possessive, url_join
+from dynamicalsystem.gazette.config import settings
+from dynamicalsystem.gazette.log import logger
+from dynamicalsystem.gazette.utils import cli_hyperlink, possessive, url_join
 from dynamicalsystem.gazette.review import Review
 from dynamicalsystem.gazette.watermarks import Watermark
 
@@ -20,7 +20,7 @@ def create_publisher(watermark: str):
 
 class Publisher(abc.ABC):
     def __init__(self, watermark: Watermark) -> None:
-        self.config = config_instance(__name__)
+        self.config = settings()
         self.logger = logger
         self.watermark = watermark
         review = Review(chart=watermark.chart, placing=watermark.placing)

@@ -66,12 +66,41 @@ same names as real environment variables (Vault, loop 4).
 - T3.1: with a local `.env` and a `Validator` watermark, `gazette` logs a
   "Validator Publication - ..." line and decrements the watermark placing.
 
-### O4: existing tests still pass
-- T4.1: `make test` (pytests) passes after the env-name migration.
+### O4: no regression in the existing suite
+- T4.1: the locally-runnable tests that passed before still pass; no new
+  failures introduced by the config migration.
 
-## Notes
+## Result (2026-06-26)
 
-The pytests currently rely on halogen's pytest-env defaults and the
-`<package>.<env>.env` file layout. Migrating them to the flat names is part of
-this loop (T4.1) -- expect to touch `pytests/.../environment.py` and the
-`gazette.pytest.env` fixture.
+Done and verified.
+
+- New modules: `config.py` (pydantic-settings flat `Settings`), `log.py`
+  (stdout-only logger), `utils.py` (vendored `url_join`/`possessive`/
+  `cli_hyperlink`). halogen removed from `gazette/pyproject.toml`; `uv sync`
+  uninstalled it. All call sites rewired.
+- New unit tests in `pytests/.../test_config.py` (flat env, defaults,
+  no-halogen import) -- all green.
+- Test fixture `environment.py` now supplies the flat names for local-only,
+  non-secret config (data folder, watermark file, public content URL).
+
+### Baseline finding: the integration suite is pre-broken
+
+Before any change, `make test` was 10 failed / 5 passed on `main` -- NOT caused
+by this work:
+
+- The test content chart `tQ25.H.json` 404s on the GitHub content repo, so every
+  `content` test crashes in `review.py` on a `None` item.
+- `test_bluesky` / `test_signal_*` do real logins and real sends.
+
+After loop 1: 10 failed / 8 passed (the same 10 integration failures, plus the 3
+new config tests). So loop 1 is net-non-regressing. Repairing the integration
+suite (test fixture data in the content repo + mocking live services) is its own
+loop -- see ooda/README.md loop 05.
+
+### Pre-existing bugs noticed (left for their own fix)
+
+- `content.py:36` missing f-string in `logger.error("{response.text} ...")`.
+- `publishers.py:131` broken `%` format and uses `print` not the logger.
+- `publishers.py:168` `_messages()` uses `self.watermark["target"]` but
+  `Watermark` is an object (`.target`).
+- `__init__.py` `main()` iterates `watermarks()` which can return `None`.

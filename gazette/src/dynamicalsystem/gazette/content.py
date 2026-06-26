@@ -1,11 +1,11 @@
-from dynamicalsystem.halogen.config import config_instance
-from dynamicalsystem.halogen.utils import url_join
-from dynamicalsystem.halogen import logger
+from dynamicalsystem.gazette.config import settings
+from dynamicalsystem.gazette.utils import url_join
+from dynamicalsystem.gazette.log import logger
 from requests import get, post
 
 class GitHub:
     def __init__(self, chart, placing):
-        self.config = config_instance(__name__)
+        self.config = settings()
         self.logger = logger
         self.chart = chart
         self.placing = placing

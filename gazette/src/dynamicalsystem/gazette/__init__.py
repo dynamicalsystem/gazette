@@ -1,4 +1,4 @@
-from dynamicalsystem.halogen import logger
+from dynamicalsystem.gazette.log import logger
 from dynamicalsystem.gazette.publishers import create_publisher
 from dynamicalsystem.gazette.watermarks import watermarks
 

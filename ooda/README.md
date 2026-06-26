@@ -33,12 +33,17 @@ Signal identity or any NAS.
 
 | # | Loop | Status | Outcome |
 |---|------|--------|---------|
-| 1 | [01-config-module](01-config-module/README.md) | [~] | gazette runs locally with no halogen import |
+| 1 | [01-config-module](01-config-module/README.md) | [x] | gazette runs locally with no halogen import |
 | 2 | 02-signal-http-client | [...] | gazette posts to the standalone Signal service |
 | 3 | 03-build-from-source | [...] | `docker build .` runs the working tree, no PyPI release |
 | 4 | 04-oci-vault-deploy | [...] | scheduled OCI run reads secrets from Vault, no keys on disk |
+| 5 | 05-test-suite | [...] | suite runs offline with mocks; integration tests opt-in |
 
 Loops 1-3 are testable entirely locally (dry-run). Loop 4 needs the VPS.
+
+Loop 05 exists because the suite was found 10/5 red on `main` before any change:
+the content fixture `tQ25.H` 404s and several tests hit live Bluesky/Signal. It
+should split fast offline unit tests from opt-in integration tests.
 
 ## Open dependency
 

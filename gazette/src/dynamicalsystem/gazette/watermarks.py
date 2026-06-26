@@ -1,11 +1,11 @@
-from dynamicalsystem.halogen.config import config_instance
-from dynamicalsystem.halogen import logger
+from dynamicalsystem.gazette.config import settings
+from dynamicalsystem.gazette.log import logger
 from json import dump, load
 from os.path import join
 
 
 def watermarks():
-    config = config_instance(__name__)
+    config = settings()
     watermark_file = join(config.data_folder, config.watermark_file)
 
     try:
@@ -22,7 +22,7 @@ class Watermark:
     def __init__(self, name: str) -> None:
         self.name = name
         self.logger = logger
-        self.config = config_instance(__name__)
+        self.config = settings()
         self.watermark_file = join(self.config.data_folder, self.config.watermark_file)
         self._load()
 
