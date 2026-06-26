@@ -1,21 +1,24 @@
 # syntax=docker/dockerfile:1
-FROM python:3.13-alpine
+#
+# Build gazette from local source -- no PyPI publish in the deploy path.
+#   podman build -t dynamicalsystem/gazette .
+#
+# Debian slim (not alpine): manylinux wheels exist for pydantic-core/atproto,
+# so the build needs no compiler toolchain.
+FROM python:3.13-slim
 
-# pass in the following build arguments from the makefile
-ARG NAMESPACE
-ARG SCRIPT
+WORKDIR /app
 
-# Install the package
-RUN python -m pip install --no-cache-dir --upgrade ${NAMESPACE}.${SCRIPT}
+# Install the gazette package from the working tree. hatchling builds it in an
+# isolated, discarded build env, so no build tooling lingers in the image.
+COPY gazette/ ./gazette/
+RUN pip install --no-cache-dir ./gazette
 
-# Create the image's folder(s)
-RUN echo "Subfolder: ${NAMESPACE}"
-RUN mkdir -p /${NAMESPACE}/config
-RUN mkdir -p /${NAMESPACE}/data
+# Watermark state lives on a mounted volume; config arrives via env (.env / Vault).
+ENV DATA_FOLDER=/data \
+    WATERMARK_FILE=watermarks.json
+RUN mkdir -p /data
+VOLUME ["/data"]
 
-# Set image's environment variables
-RUN echo "   Script: ${SCRIPT}"
-ENV SCRIPT=${SCRIPT}
-
-# Run the module on launch
-CMD ["sh", "-c", "${SCRIPT}"]
+# Run-to-completion: the `gazette` console script (dynamicalsystem.gazette:main).
+ENTRYPOINT ["gazette"]

@@ -1,17 +1,20 @@
-ENV ?= test
-export ENV
-
 NAMESPACE := dynamicalsystem
 PACKAGE_NAME := gazette
-DOCKER_IMAGE := ${NAMESPACE}/$(PACKAGE_NAME)
-HOST_FOLDER := ${HOME}/.local/share
-VERSION := $(shell grep -m 1 version pyproject.toml | grep -e '\d.\d.\d' -o)
-TARBALL := ${NAMESPACE}_${VERSION}.tar.gz
+DOCKER_IMAGE := $(NAMESPACE)/$(PACKAGE_NAME)
+ENGINE ?= podman
 
-.PHONY:
-	container, publish, sync, test
+.PHONY: all build check publish image test
 
-all: sync test image
+all: test image
+
+# Build the runnable image from local source. No PyPI round-trip.
+image:
+	$(ENGINE) build . --tag $(DOCKER_IMAGE)
+
+test:
+	uv run pytest --pyargs dynamicalsystem.pytests
+
+# --- PyPI release (optional, NOT part of the image/deploy path) ---
 
 build:
 	uv build --wheel --package dynamicalsystem.gazette
@@ -21,25 +24,3 @@ check: build
 
 publish: check
 	uvx twine upload dist/*
-
-containers: image
-	export HOST_FOLDER=${HOST_FOLDER} && \
-	export SUBFOLDER=${NAMESPACE} && \
-	export ENV=${ENV} && \
-	echo $$HOST_FOLDER $$ENV && \
-	docker compose -f docker-compose.yml up -d
-
-	export HOST_FOLDER=${HOST_FOLDER} && \
-	export SUBFOLDER=${NAMESPACE} && \
-	export ENV=${ENV} && \
-	echo $$HOST_FOLDER $$ENV && \
-	docker compose -f docker-compose.yml create gazette
-
-image: publish
-	docker build . \
-		--tag $(DOCKER_IMAGE) \
-		--build-arg NAMESPACE=${NAMESPACE} \
-		--build-arg SCRIPT=${PACKAGE_NAME}
-
-test:
-	uv run pytest --pyargs dynamicalsystem.pytests

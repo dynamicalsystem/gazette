@@ -35,7 +35,7 @@ Signal identity or any NAS.
 |---|------|--------|---------|
 | 1 | [01-config-module](01-config-module/README.md) | [x] | gazette runs locally with no halogen import |
 | 2 | [02-signal-http-client](02-signal-http-client/README.md) | [x] | gazette posts to the standalone Signal service |
-| 3 | 03-build-from-source | [...] | `docker build .` runs the working tree, no PyPI release |
+| 3 | [03-build-from-source](03-build-from-source/README.md) | [x] | `docker build .` runs the working tree, no PyPI release |
 | 4 | 04-oci-vault-deploy | [...] | scheduled OCI run reads secrets from Vault, no keys on disk |
 | 5 | 05-test-suite | [...] | suite runs offline with mocks; integration tests opt-in |
 
