@@ -1,0 +1,20 @@
+{
+    "example_validator_route": {
+        "publisher": "Validator",
+        "chart": "tQ00.X",
+        "placing": 100,
+        "target": "dev"
+    },
+    "example_signal_route": {
+        "publisher": "Signal",
+        "chart": "tQ00.X",
+        "placing": 100,
+        "target": "group.REPLACE_WITH_REAL_SIGNAL_GROUP_ID="
+    },
+    "example_bluesky_route": {
+        "publisher": "Bluesky",
+        "chart": "tQ00.X",
+        "placing": 100,
+        "target": "prod"
+    }
+}

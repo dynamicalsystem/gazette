@@ -13,3 +13,8 @@ wheels/
 .env
 .env.*
 !.env.example
+
+# Watermark state contains routing targets (group ids, phone numbers) and a
+# mutable placing -- never commit it. Keep only the sanitized example.
+watermarks*.json
+!watermarks.example.json
