@@ -1,13 +1,13 @@
-from urllib.parse import urljoin
+def url_join(base: str, fragments: list) -> str:
+    """Join a base URL with path fragments, no trailing slash.
 
-
-def url_join(base: str, fragments: list):
+    e.g. url_join("http://signal:8080", ["v2/send"]) -> "http://signal:8080/v2/send"
+    """
+    parts = [base.rstrip("/")]
     for fragment in fragments:
-        if fragment[-1] != "/":
-            fragment += "/"
-        base = urljoin(base, fragment, allow_fragments=True)
+        parts.append(str(fragment).strip("/"))
 
-    return base
+    return "/".join(parts)
 
 
 def cli_hyperlink(url, label=None):

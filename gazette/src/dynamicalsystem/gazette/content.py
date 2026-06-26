@@ -9,10 +9,7 @@ class GitHub:
         self.logger = logger
         self.chart = chart
         self.placing = placing
-        self.url = url_join(
-            self.config.github_url,
-            [self.chart + ".json"]
-        )[:-1] # TDOO: Remove trailing slash in halogen.utils.url_join
+        self.url = url_join(self.config.github_url, [self.chart + ".json"])
 
         headers = {
             "Authorization": f"token {self.config.github_token}",

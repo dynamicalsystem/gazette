@@ -127,18 +127,18 @@ class Signal(Publisher):
             return False
 
         if not response.ok:
-            error = response.json().get("error")
-            print("Failed to post to Signal Messenger: %", error.split("\n")[0])
+            error = response.json().get("error") or ""
+            first_line = error.splitlines()[0] if error else str(response.status_code)
+            self.logger.error(f"Failed to post to Signal Messenger: {first_line}")
             if response.status_code == 400:
-                if search(
-                    "The Signal protocol expects that incoming messages are regularly received.",
-                    error,
-                ):
-                    messages = self._messages()
-                    self.logger.warning(f"Message count: {len(messages)}")
+                if search("incoming messages are regularly received", error):
+                    count = self._drain_inbox()
+                    self.logger.warning(
+                        f"Drained {count} Signal messages; retrying send"
+                    )
                     response = post(url, json=data, headers=headers)
-                if search("Unregistered user", error):
-                    response = True  # todo: not really sure how check if the message actually got sent...
+                elif search("Unregistered user", error):
+                    return True  # todo: confirm the message actually got sent
 
         return response
 
@@ -162,15 +162,19 @@ class Signal(Publisher):
             f"{self.chart}.{self.placing}"
         )
 
-    def _messages(self):
+    def _drain_inbox(self) -> int:
+        """signal-cli requires incoming messages be received periodically, or it
+        rejects sends. Drain the receive endpoint so the retried send succeeds.
+        """
         try:
             url = url_join(
-                self.watermark["target"],
-                ["v1/receive", self.config.signal_phone_number],
+                self.config.signal_url,
+                ["v1/receive", self.config.signal_identity],
             )
             return len(get(url).json())
-        except Exception:
-            return False
+        except Exception as e:
+            self.logger.error(f"Failed to drain Signal inbox: {e}")
+            return 0
 
 
 class Validator(Publisher):

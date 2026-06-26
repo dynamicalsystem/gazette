@@ -8,3 +8,8 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Local secrets / config (keep .env.example tracked)
+.env
+.env.*
+!.env.example
