@@ -1,4 +1,4 @@
-# Loop 01: config module
+# [ARCHIVED] Loop 01: config module
 
 Replace halogen's config and logging in gazette with a single minimal settings
 module, and drop the `dynamicalsystem.halogen` dependency entirely.

@@ -1,4 +1,4 @@
-# Loop 03: build from local source
+# [ARCHIVED] Loop 03: build from local source
 
 Make `podman build .` produce a runnable gazette image from the working tree,
 with no PyPI publish anywhere in the build/deploy path.

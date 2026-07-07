@@ -1,4 +1,4 @@
-# Loop 05: CI to GHCR + drop legacy deploy
+# [ARCHIVED] Loop 05: CI to GHCR + drop legacy deploy
 
 Make gazette's CI build a multi-arch image and push it to GHCR on merge to main,
 matching the tinsnip fleet model, and delete the legacy homelab deploy artifacts.

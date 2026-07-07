@@ -1,4 +1,4 @@
-# Loop 02: signal HTTP client
+# [ARCHIVED] Loop 02: signal HTTP client
 
 Make gazette's Signal boundary correct, safe, and documented for both prod and
 dev, talking to the standalone Signal service (its own repo) over HTTP.

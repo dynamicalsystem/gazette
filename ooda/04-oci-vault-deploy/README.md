@@ -1,13 +1,16 @@
-# Loop 04: deploy + config delivery
+# [ARCHIVED] Loop 04: deploy + config delivery
 
 Get gazette running unattended on OCI with secrets from Vault. Precursor work
 (done first, locally): give the halogen-free code a working flat-config delivery
 for local prod + dev, so we can iterate toward 26.H before the cloud move.
 
-## Status: [~] in progress
+## Status: [x] closed -- see archived.md
 
-Local config delivery is staged and verified. Cloud (OCI Vault, VPS scheduler,
-compose rewrite, watermark volume) is not started.
+Local config delivery is staged and verified (dev .env/Validator + prod
+exported/Signal), and the content PAT + Signal/WireGuard path is proven
+end-to-end. The Vault/cloud half (OCI Vault, VPS scheduler, compose rewrite,
+watermark volume) was SUPERSEDED by the tinsnip quadlet decision
+(ooda/README, revised 2026-07-01) and moved to loops 06/07.
 
 ## Config delivery model (local, 2026-06-26)
 

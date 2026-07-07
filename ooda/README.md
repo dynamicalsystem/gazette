@@ -62,6 +62,10 @@ on the `web` and `signal-net` networks. Reference: `../tinsnip`, `../festers`.
 
 ## Loops
 
+Loops 01-05 are closed and archived (each folder has an archived.md and an
+[ARCHIVED] README heading, so /readthedocs skips them). Loop 06 is the sole
+active loop; loop 07 is scoped but not started.
+
 | # | Loop | Status | Outcome |
 |---|------|--------|---------|
 | 1 | [01-config-module](01-config-module/README.md) | [x] | gazette runs locally with no halogen import |
