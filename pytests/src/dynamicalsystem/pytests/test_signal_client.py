@@ -36,7 +36,7 @@ def test_signal_publish_posts_expected_contract(monkeypatch):
 
     calls = []
 
-    def fake_post(url, json, headers):
+    def fake_post(url, json, headers, **kwargs):
         calls.append((url, json, headers))
         return _response(ok=True, status=201)
 
@@ -62,7 +62,7 @@ def test_signal_publish_drains_and_retries_on_400(monkeypatch):
     posts = []
     error = "The Signal protocol expects that incoming messages are regularly received."
 
-    def fake_post(url, json, headers):
+    def fake_post(url, json, headers, **kwargs):
         posts.append(url)
         # first attempt fails with the "regularly received" 400, retry succeeds
         if len(posts) == 1:
@@ -83,3 +83,47 @@ def test_signal_publish_drains_and_retries_on_400(monkeypatch):
 
     assert len(posts) == 2  # original + retry
     assert drained == ["http://signal:8080/v1/receive/+100"]
+
+
+def test_signal_publish_retries_transient_socket_error(monkeypatch):
+    """A transient signal-cli SocketException (400) is retried, not skipped."""
+    from dynamicalsystem.gazette import publishers
+
+    monkeypatch.setattr(publishers, "sleep", lambda *_: None)  # no real backoff
+    error = "Failed to send message: Connection terminated unexpectedly (SocketException)"
+    posts = []
+
+    def fake_post(url, json, headers, **kwargs):
+        posts.append(url)
+        if len(posts) == 1:
+            return _response(ok=False, status=400, error=error)  # transient
+        return _response(ok=True, status=201)
+
+    monkeypatch.setattr(publishers, "post", fake_post)
+
+    s = _make_signal()
+    result = s.publish()
+
+    assert len(posts) == 2  # failed once, retried, succeeded
+    assert result.ok is True
+
+
+def test_signal_publish_gives_up_after_all_attempts(monkeypatch):
+    """Persistent failure exhausts the attempts and returns False (watermark held)."""
+    from dynamicalsystem.gazette import publishers
+
+    monkeypatch.setattr(publishers, "sleep", lambda *_: None)
+    error = "Failed to send message: Connection terminated unexpectedly (SocketException)"
+    posts = []
+
+    def fake_post(url, json, headers, **kwargs):
+        posts.append(url)
+        return _response(ok=False, status=400, error=error)
+
+    monkeypatch.setattr(publishers, "post", fake_post)
+
+    s = _make_signal()
+    result = s.publish()
+
+    assert result is False
+    assert len(posts) == s._RETRY_ATTEMPTS  # tried the full budget

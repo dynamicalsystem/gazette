@@ -1,7 +1,8 @@
 import abc
 from atproto import Client, client_utils
 from re import search
-from requests import get, post, ConnectionError
+from time import sleep
+from requests import get, post, RequestException
 from dynamicalsystem.gazette.config import settings
 from dynamicalsystem.gazette.log import logger
 from dynamicalsystem.gazette.utils import possessive, url_join
@@ -107,6 +108,11 @@ class Signal(Publisher):
         super().__init__(watermark)
         self.logger.debug("__init__")
 
+    # signal-cli's send can fail transiently (stale websocket ->
+    # "Connection terminated unexpectedly"); retry rather than skip the target.
+    _RETRY_ATTEMPTS = 3
+    _RETRY_BACKOFF = 10  # seconds between transient retries
+
     def publish(self):
         url = url_join(self.config.signal_url, ["v2/send"])
         data = {
@@ -117,27 +123,46 @@ class Signal(Publisher):
         }
         headers = {"Content-Type": "application/json"}
 
-        try:
-            response = post(url, json=data, headers=headers)
-        except ConnectionError as e:
-            self.logger.error(f"Failed to connect to Signal Messenger: {e}")
-            return False
+        for attempt in range(1, self._RETRY_ATTEMPTS + 1):
+            try:
+                response = post(url, json=data, headers=headers, timeout=90)
+            except RequestException as e:
+                self.logger.error(
+                    f"Signal send {attempt}/{self._RETRY_ATTEMPTS} -- request error: {e}"
+                )
+                if attempt < self._RETRY_ATTEMPTS:
+                    sleep(self._RETRY_BACKOFF)
+                    continue
+                return False
 
-        if not response.ok:
+            if response.ok:
+                return response
+
             error = response.json().get("error") or ""
             first_line = error.splitlines()[0] if error else str(response.status_code)
-            self.logger.error(f"Failed to post to Signal Messenger: {first_line}")
-            if response.status_code == 400:
-                if search("incoming messages are regularly received", error):
-                    count = self._drain_inbox()
-                    self.logger.warning(
-                        f"Drained {count} Signal messages; retrying send"
-                    )
-                    response = post(url, json=data, headers=headers)
-                elif search("Unregistered user", error):
-                    return True  # todo: confirm the message actually got sent
 
-        return response
+            # permanent for this recipient -- do not retry
+            if response.status_code == 400 and search("Unregistered user", error):
+                return True  # todo: confirm the message actually got sent
+
+            # signal-cli wants its inbox drained before it will send -- drain, retry now
+            if response.status_code == 400 and search(
+                "incoming messages are regularly received", error
+            ):
+                count = self._drain_inbox()
+                self.logger.warning(f"Drained {count} Signal messages; retrying send")
+                continue
+
+            # anything else (incl. the transient SocketException 400) -- back off + retry
+            self.logger.error(
+                f"Signal send {attempt}/{self._RETRY_ATTEMPTS} failed: {first_line}"
+            )
+            if attempt < self._RETRY_ATTEMPTS:
+                sleep(self._RETRY_BACKOFF)
+                continue
+            return False
+
+        return False
 
     def _formatter(self):
         # This prevents people guessing the verdict by the length of the message
