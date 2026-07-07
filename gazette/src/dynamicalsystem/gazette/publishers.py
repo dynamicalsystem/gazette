@@ -4,7 +4,7 @@ from re import search
 from requests import get, post, ConnectionError
 from dynamicalsystem.gazette.config import settings
 from dynamicalsystem.gazette.log import logger
-from dynamicalsystem.gazette.utils import cli_hyperlink, possessive, url_join
+from dynamicalsystem.gazette.utils import possessive, url_join
 from dynamicalsystem.gazette.review import Review
 from dynamicalsystem.gazette.watermarks import Watermark
 
@@ -28,16 +28,13 @@ class Publisher(abc.ABC):
         self.chart = review.chart
         self.placing = review.placing
 
-        if d := review.content.validate_content():
+        if review.content.validate_content():
             self.content = review
         else:
-            self.logger.warning(
-                (
-                    'Content missing for '
-                    f"{cli_hyperlink(review.content.url, {watermark.placing})}"
-                )
-            )
-            return
+            # No usable review (empty/invalid content). Raise ValueError so
+            # main() skips to the next target WITHOUT decrementing this
+            # watermark -- the placing is retried once the review is written.
+            raise ValueError(f"Content missing for {self.chart}.{self.placing}")
 
     @abc.abstractmethod
     def publish(self):

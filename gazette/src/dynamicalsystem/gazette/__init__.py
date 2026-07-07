@@ -26,8 +26,10 @@ def main() -> int:
                         f"with {publisher.watermark.name}."
                     )
                 )
-        except ValueError as e:  # no review found
-            logger.exception((f"{str(e)} Watermark {watermark}."))
+        except ValueError as e:  # no review yet / chart complete -- expected
+            # Not a fault: skip this target and hold its watermark. A traceback
+            # here would fire every scheduled run for every unwritten placing.
+            logger.warning(f"{e} Watermark {watermark} -- skipping, watermark held.")
             continue
 
     return 0
