@@ -92,7 +92,7 @@ def test_main_continues_past_failures_without_updating(monkeypatch):
     monkeypatch.setattr(gazette, "watermarks", lambda: ["empty", "failer", "good"])
     monkeypatch.setattr(gazette, "create_publisher", fake_create)
 
-    rc = gazette.main()
+    rc = gazette.publish_once()
 
     assert rc == 0                    # no crash
     assert good.updated is True       # loop reached the later target and advanced it

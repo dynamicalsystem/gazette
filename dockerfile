@@ -20,5 +20,8 @@ ENV DATA_FOLDER=/data \
 RUN mkdir -p /data
 VOLUME ["/data"]
 
-# Run-to-completion: the `gazette` console script (dynamicalsystem.gazette:main).
+# Long-lived web service by default (`gazette serve`); the one-shot publish sweep
+# is `podman run <img> publish`. Timing is systemd's job (loop 07), not the image.
+EXPOSE 8000
 ENTRYPOINT ["gazette"]
+CMD ["serve"]

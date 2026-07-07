@@ -4,7 +4,7 @@ Turn gazette from a run-to-completion batch into a long-lived web service, WITHO
 coupling the publish path to the web path. The domain stays a library; `publish`
 and `serve` become two thin, independent adapters over it.
 
-## Status: [...] not started
+## Status: [x] done -- verified 2026-07-07 (merge pending)
 
 ## Why
 
@@ -106,3 +106,27 @@ Out:
   scheduler is a `.timer` (visible in `systemctl list-timers`, per-run exit code in
   journald). Keeping timing out of the app is what keeps the two adapters uncoupled
   and the box troubleshootable.
+
+## Result (2026-07-07)
+
+Done and verified.
+
+- Library: `publish_once()` extracted from the old `main()` (behaviour unchanged;
+  added a guard so a missing/empty watermark file logs and returns 0 instead of
+  crashing on `None` -- the loop-03 latent bug, in the function this loop touched).
+- Adapters: `cli.py` (`gazette publish` / `gazette serve`, `serve` imported lazily
+  so `publish` never pulls in fastapi); `app.py` (FastAPI, `GET /health` ->
+  `{status, version}`, independent of watermark/content/network). Console script
+  -> `:cli`; `__main__` -> `cli`.
+- Config: `http_host`/`http_port`. Deps: `fastapi` + `uvicorn[standard]` only.
+- dockerfile: `EXPOSE 8000`, `ENTRYPOINT ["gazette"]` + `CMD ["serve"]`.
+  `gazette-run.sh` updated to `gazette publish` (local file, not in repo).
+
+Verified: 17 offline unit tests green (6 new in test_service.py). Live `gazette
+publish` dry-run posted place 98 x4 via Validator and decremented. Live `gazette
+serve` -> `/health` 200 `{"status":"ok","version":"0.1.5"}`. Container: default
+`podman run` serves and stays up (`/health` 200 in-container); `podman run <img>
+publish` runs the one-shot and exits.
+
+Out (unchanged): the systemd `.timer` + quadlets and the timer-trigger choice are
+loop 07; feature endpoints are a separate arc.

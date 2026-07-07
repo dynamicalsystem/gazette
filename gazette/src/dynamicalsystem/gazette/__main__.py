@@ -1,6 +1,5 @@
-import dynamicalsystem.gazette
-from importlib.metadata import version
 import sys
 
-print(version('dynamicalsystem.gazette'))
-sys.exit(dynamicalsystem.gazette.main())
+from dynamicalsystem.gazette.cli import cli
+
+sys.exit(cli())
