@@ -62,9 +62,9 @@ on the `web` and `signal-net` networks. Reference: `../tinsnip`, `../festers`.
 
 ## Loops
 
-Loops 01-05 are closed and archived (each folder has an archived.md and an
-[ARCHIVED] README heading, so /readthedocs skips them). Loop 06 is the sole
-active loop; loop 07 is scoped but not started.
+Loops 01-06 are closed and archived (each folder has an archived.md and an
+[ARCHIVED] README heading, so /readthedocs skips them). Loop 07 (tinsnip quadlet
++ go-live) is the sole active loop -- scoped, not started.
 
 | # | Loop | Status | Outcome |
 |---|------|--------|---------|

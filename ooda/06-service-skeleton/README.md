@@ -1,10 +1,10 @@
-# Loop 06: batch to service skeleton
+# [ARCHIVED] Loop 06: batch to service skeleton
 
 Turn gazette from a run-to-completion batch into a long-lived web service, WITHOUT
 coupling the publish path to the web path. The domain stays a library; `publish`
 and `serve` become two thin, independent adapters over it.
 
-## Status: [x] done -- verified 2026-07-07 (merge pending)
+## Status: [x] closed -- merged 2026-07-07 (7b4ee3d); see archived.md
 
 ## Why
 
