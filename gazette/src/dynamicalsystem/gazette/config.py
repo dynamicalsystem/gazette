@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     data_folder: str = ""
     watermark_file: str = "watermarks.json"
 
+    # web service (gazette serve)
+    http_host: str = "0.0.0.0"
+    http_port: int = 8000
+
 
 @lru_cache(maxsize=1)
 def settings() -> Settings:

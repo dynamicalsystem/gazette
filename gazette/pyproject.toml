@@ -11,6 +11,8 @@ dependencies = [
     "atproto>=0.0.56",
     "pydantic-settings>=2.0",
     "requests>=2.32.3",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
 ]
 classifiers = [
   "Development Status :: 3 - Alpha",
@@ -20,7 +22,7 @@ classifiers = [
 ]
 
 [project.scripts]
-gazette = "dynamicalsystem.gazette:main"
+gazette = "dynamicalsystem.gazette.cli:cli"
 
 [tool.hatch.metadata]
 allow-direct-references = true

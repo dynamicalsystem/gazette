@@ -3,10 +3,18 @@ from dynamicalsystem.gazette.publishers import create_publisher
 from dynamicalsystem.gazette.watermarks import watermarks
 
 
-def main() -> int:
-    _ = watermarks()
+def publish_once() -> int:
+    """Run one publish sweep: for each watermark (target), publish the current
+    placing and decrement it on success. Skips targets with no usable review and
+    holds their watermark. Library entry point -- called by the `publish` CLI and
+    (via loop 07) by the systemd timer. Does not touch the web stack.
+    """
+    marks = watermarks()
+    if not marks:
+        logger.warning("No watermarks to publish (missing or empty watermark file).")
+        return 0
 
-    for watermark in _:
+    for watermark in marks:
         try:
             publisher = create_publisher(watermark=watermark)
             if publisher.publish():
