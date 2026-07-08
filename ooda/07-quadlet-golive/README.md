@@ -1,10 +1,10 @@
-# Loop 07: tinsnip quadlet + go-live
+# [ARCHIVED] Loop 07: tinsnip quadlet + go-live
 
 Deploy gazette to the `gateway` box as tinsnip quadlets -- a long-lived `serve`
 container plus a timer-driven `publish` one-shot -- and cut tQ26.H publishing over
 from the Mac to the box.
 
-## Status: [...] not started
+## Status: [x] closed -- live 2026-07-07, first timed run 2026-07-08 07:00 UK verified; see archived.md
 
 ## Why
 
@@ -90,3 +90,23 @@ Out:
 
 - 05 (GHCR image), 06 (service shape). Needs the `gateway` box + `tinsnip` access.
   Reference: `../tinsnip` (`hosts/gateway/festers.container` as the template).
+
+## Result (2026-07-08)
+
+Done and verified live.
+
+- tinsnip units on `gateway`: `gazette.container` (serve, `/health` gate via
+  `--sdnotify=healthy`, `AutoUpdate=registry`, on signal-net+web) + `gazette-publish.container`
+  + `.timer` (07:00 Europe/London). `install.sh` extended to link host-specific timers.
+- On-box `~/gazette/deploy/gazette.env` (chmod 600, `SIGNAL_URL=http://signal:8080`);
+  watermark volume `~/.local/state/dynamicalsystem/gazette/watermarks.json`.
+- CI/CD proven end-to-end (O3): pushing v0.1.6 -> CI -> GHCR -> auto-update swap posted the
+  deploy Signal message to Abyss. Manual kick sent Abyss place 100 (O2 smoke test).
+- First timed run 2026-07-08 07:00 UK fired clean (systemd result=success, exit 0): all four
+  targets published -- watermarks decremented abyss 99->98, bluesky/calendrical_rot/josh
+  100->99. Next run Thu 2026-07-09 06:00 UTC.
+- Single publisher (O5): Mac launchd unloaded + plist renamed (no double-send). Signal send
+  hardened with 3x transient retry (v0.1.6); watermark held on failure.
+
+Closes the gazette cloud refactor (loops 01-07). Feature web endpoints (historic reviews /
+insights / festers) are a separate future arc off the loop-06 serve skeleton.

@@ -62,9 +62,12 @@ on the `web` and `signal-net` networks. Reference: `../tinsnip`, `../festers`.
 
 ## Loops
 
-Loops 01-06 are closed and archived (each folder has an archived.md and an
-[ARCHIVED] README heading, so /readthedocs skips them). Loop 07 (tinsnip quadlet
-+ go-live) is the sole active loop -- scoped, not started.
+Loops 01-07 are all closed and archived (each folder has an archived.md and an
+[ARCHIVED] README heading, so /readthedocs skips them). **The gazette cloud
+refactor is COMPLETE** -- gazette runs on the OCI `gateway` box as tinsnip
+quadlets, publishing tQ26.H daily at 07:00 UK (first timed run 2026-07-08). No
+active loop. Feature web endpoints (historic reviews / insights / festers) are a
+separate future arc off the loop-06 serve skeleton.
 
 | # | Loop | Status | Outcome |
 |---|------|--------|---------|
