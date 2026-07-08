@@ -26,6 +26,13 @@ begun on the identity substrate: [`orient/identity.md`](orient/identity.md) -- t
 capability hierarchy, the "wrong level" festers fix, and the seed-derivation fork
 (leaning pure-derivation). Act (the first spike) follows.
 
+**Anchoring use case:** [`observe/gig-coordination-journey.md`](observe/gig-coordination-journey.md)
+-- a lived workflow (coordinating gig attendance + payment in a private group chat) that
+grounds the whole arc and reframes the likely v1 wedge: a **coordination assistant in the
+group chat you already use**, with the graph/history/matching emerging as a byproduct.
+Notably its nearest slice is buildable on gazette's *existing* Signal machinery -- no
+PDS/ZK/atproto required.
+
 ## Candidate first experiment (to confirm in orient)
 
 The **"glucose transporter"** spike: two fans, one private facet ("near Manchester"),
