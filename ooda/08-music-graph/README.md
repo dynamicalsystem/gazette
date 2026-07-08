@@ -20,9 +20,11 @@ membrane between them.
 
 ## Phase
 
-We are in **Observe**. The synthesis, model, state-of-the-art, and open questions are
-in [`observe/observations.md`](observe/observations.md). Orient (firm the model + pick
-the identity/trust stance) and Act (the first spike) follow.
+We are in **Observe -> Orient**. The synthesis, model, state-of-the-art, and open
+questions are in [`observe/observations.md`](observe/observations.md). Orient has
+begun on the identity substrate: [`orient/identity.md`](orient/identity.md) -- the HMAC
+capability hierarchy, the "wrong level" festers fix, and the seed-derivation fork
+(leaning pure-derivation). Act (the first spike) follows.
 
 ## Candidate first experiment (to confirm in orient)
 
