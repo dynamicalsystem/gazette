@@ -36,7 +36,16 @@ group chat you already use**, with the graph/history/matching emerging as a bypr
 Notably its nearest slice is buildable on gazette's *existing* Signal machinery -- no
 PDS/ZK/atproto required.
 
-## Candidate first experiment (to confirm in orient)
+## Act so far
+
+- **[x] Signal-muster receive spike** (2026-07-08) -- **success**. Publishing a muster and
+  folding Signal reactions into a live roster+ledger works end to end on gazette's Signal
+  path. Findings + the one architectural constraint (a persistent websocket listener is
+  required; json-rpc drops messages with no client attached) in
+  [`act/spike-signal-receive.md`](act/spike-signal-receive.md). This is the "ingest-in"
+  seam the muster needs, proven with no PDS/ZK/atproto.
+
+## Later experiment (the novel core)
 
 The **"glucose transporter"** spike: two fans, one private facet ("near Manchester"),
 one public interest ("follows band X") -> the server surfaces a **mutual opt-in match**
