@@ -10,11 +10,15 @@ from env (source gazette.prod.env for the live gigbot over WireGuard). NOT wired
 the package. The receive endpoint is DESTRUCTIVE (consumes the queue) -- do not run
 during a prod publish.
 
+signal-cli runs in json-rpc mode, so /v1/receive is WEBSOCKET-only (HTTP GET 400s).
+Run with the websocket client:
+    uv run --with websocket-client python spikes/muster_receive_spike.py ...
+
 Usage:
     source ~/.local/share/dynamicalsystem/config/gazette.prod.env   # SIGNAL_URL=WG, gigbot
-    python spikes/muster_receive_spike.py send <target> "Muster: <band> ..."
-    python spikes/muster_receive_spike.py raw                       # dump the raw receive queue
-    python spikes/muster_receive_spike.py watch <muster_timestamp>  # poll + fold reactions
+    ... send <target> "Muster: <band> ..."     # publish a muster (HTTP /v2/send)
+    ... raw                                     # stream + dump raw envelopes (10s idle exit)
+    ... watch <muster_timestamp>                # stream + fold reactions into a roster
 
 Reaction convention (spike): any reaction => "in" (join roster); a money emoji
 (£/$ / 💷💰💵 / ✅) => "paid". Removing a reaction => leave.
@@ -22,9 +26,9 @@ Reaction convention (spike): any reaction => "in" (join roster); a money emoji
 import json
 import os
 import sys
-import time
 
 import requests
+import websocket  # websocket-client
 
 SIGNAL_URL = os.environ.get("SIGNAL_URL", "").rstrip("/")
 IDENTITY = os.environ.get("SIGNAL_IDENTITY", "")
@@ -53,16 +57,39 @@ def send(target: str, text: str) -> None:
         print(f">>> next: python {sys.argv[0]} watch {ts}")
 
 
-def receive() -> list:
-    r = requests.get(f"{SIGNAL_URL}/v1/receive/{IDENTITY}", timeout=60)
-    r.raise_for_status()
-    return r.json()
+def _ws_url() -> str:
+    base = SIGNAL_URL.replace("https://", "wss://").replace("http://", "ws://")
+    return f"{base}/v1/receive/{IDENTITY}"
+
+
+def stream(on_envelope, idle_timeout: float | None = None) -> None:
+    """Connect the receive websocket and call on_envelope(dict) per message.
+    idle_timeout seconds of silence -> return (None = block forever)."""
+    ws = websocket.create_connection(_ws_url(), timeout=idle_timeout)
+    print(f"connected {_ws_url()}")
+    try:
+        while True:
+            try:
+                msg = ws.recv()
+            except websocket.WebSocketTimeoutException:
+                print("(idle timeout -- closing)")
+                return
+            if not msg:
+                continue
+            try:
+                on_envelope(json.loads(msg))
+            except json.JSONDecodeError:
+                print(f"(non-json frame: {msg!r})")
+    except KeyboardInterrupt:
+        print("\n(stopped)")
+    finally:
+        ws.close()
 
 
 def raw() -> None:
-    envs = receive()
-    print(f"=== {len(envs)} envelope(s) (RAW -- queue now drained) ===")
-    print(json.dumps(envs, indent=2, ensure_ascii=False))
+    print("=== streaming raw envelopes (react in Signal now; 10s idle exits) ===")
+    stream(lambda env: print(json.dumps(env, indent=2, ensure_ascii=False)),
+           idle_timeout=10)
 
 
 def parse(item: dict) -> dict:
@@ -91,23 +118,22 @@ def parse(item: dict) -> dict:
 def watch(muster_ts: int) -> None:
     roster: dict[str, str] = {}   # who -> "in" | "paid"
     print(f"watching muster {muster_ts}; react in Signal (any=join, money=paid). Ctrl-C to stop.\n")
-    seen = 0
-    while True:
-        for item in receive():
-            p = parse(item)
-            seen += 1
-            print(f"  [{p['kind']}] from={p['from']} " +
-                  " ".join(f"{k}={v}" for k, v in p.items() if k not in ("kind", "from")))
-            if p["kind"] == "reaction" and p.get("target_ts") == muster_ts:
-                who = p["from"]
-                if p.get("remove"):
-                    roster.pop(who, None)
-                elif p.get("emoji") in PAID_EMOJI:
-                    roster[who] = "paid"
-                else:
-                    roster.setdefault(who, "in")
-                print(f"    -> roster: {roster}")
-        time.sleep(3)
+
+    def fold(item: dict) -> None:
+        p = parse(item)
+        print(f"  [{p['kind']}] from={p['from']} " +
+              " ".join(f"{k}={v}" for k, v in p.items() if k not in ("kind", "from")))
+        if p["kind"] == "reaction" and p.get("target_ts") == muster_ts:
+            who = p["from"]
+            if p.get("remove"):
+                roster.pop(who, None)
+            elif p.get("emoji") in PAID_EMOJI:
+                roster[who] = "paid"
+            else:
+                roster.setdefault(who, "in")
+            print(f"    -> roster: {roster}")
+
+    stream(fold, idle_timeout=20)  # exit after 20s idle (turn-friendly for the spike)
 
 
 if __name__ == "__main__":
