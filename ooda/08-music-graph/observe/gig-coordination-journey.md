@@ -85,12 +85,11 @@ insight/history/matching layers become the reward on top of a tool people alread
 - **Signal first; WhatsApp is a cliff.** gazette already lives in Signal (signal-cli),
   so a Signal bot-in-group is feasible. WhatsApp has no comparable open bot path (Business
   API or nothing). "Same experience across chats" is aspirational; Signal is the beachhead.
-- **Where does the canonical record live?** Chat is append-only + ephemeral; a stateful
-  record wants edit-in-place, hence the lossy reposting. Fork for a later loop:
-  (a) in-chat snapshots (native, messy, spammy) vs (b) canonical record on the web (the
-  Gig's private group page at `gazette.dynamicalsystem.com`) + smart reminder posts into
-  chat. Likely a **hybrid** -- web is the source of truth, chat gets nudges -- which is
-  also why the serve skeleton matters.
+- **Where does the canonical record live?** [RESOLVED in `../orient/coordination-primitive.md`]
+  Not the chat. Truth lives in a **dynamicalsystem service** (a `group_cap`-gated record);
+  the chat is a **pluggable, bidirectional comms adapter** (nudges out, reactions in), and
+  the web is depth. This also generalises the gig into a reusable "muster" primitive
+  (roster + locus + moment + optional transaction chain) shared across gazette/festers/runclub.
 
 ## Nearest buildable slice (when this arc opens)
 

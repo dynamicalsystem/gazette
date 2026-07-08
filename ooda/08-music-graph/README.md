@@ -22,9 +22,12 @@ membrane between them.
 
 We are in **Observe -> Orient**. The synthesis, model, state-of-the-art, and open
 questions are in [`observe/observations.md`](observe/observations.md). Orient has
-begun on the identity substrate: [`orient/identity.md`](orient/identity.md) -- the HMAC
-capability hierarchy, the "wrong level" festers fix, and the seed-derivation fork
-(leaning pure-derivation). Act (the first spike) follows.
+begun on two fronts: [`orient/identity.md`](orient/identity.md) -- the HMAC capability
+hierarchy, the "wrong level" festers fix, and the seed-derivation fork (leaning
+pure-derivation); and [`orient/coordination-primitive.md`](orient/coordination-primitive.md)
+-- the generic "muster" (herd a roster to a locus at a moment with an optional transaction
+chain), with the decision that **the service is truth and the chat is a pluggable comms
+adapter**. Act (the first spike) follows.
 
 **Anchoring use case:** [`observe/gig-coordination-journey.md`](observe/gig-coordination-journey.md)
 -- a lived workflow (coordinating gig attendance + payment in a private group chat) that
