@@ -1,12 +1,19 @@
 name: release
 
-# Build the gazette image and push it to GHCR on every merge to main (and on
-# version tags). The gateway box pulls this image to deploy as a tinsnip quadlet
+# Build the gazette image and push it to GHCR when the package or dockerfile
+# changes on main. The gateway box pulls this image to deploy as a tinsnip quadlet
 # (see the private tinsnip repo, hosts/gateway/gazette.container).
 on:
   push:
     branches: [main]
-    tags: ['v*']
+    # Only rebuild when something that affects the IMAGE changes -- NOT on
+    # ooda/docs/spikes/tests pushes, which would otherwise force a needless GHCR
+    # build + auto-update swap on the box. To force a build after a build-config
+    # change, use "Run workflow" (workflow_dispatch) or bump the package version.
+    paths:
+      - 'gazette/**'
+      - 'dockerfile'
+  workflow_dispatch:
 
 concurrency:
   group: release-${{ github.ref }}
