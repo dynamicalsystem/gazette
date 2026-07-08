@@ -120,6 +120,7 @@ def watch(muster_ts: int) -> None:
     print(f"watching muster {muster_ts}; react in Signal (any=join, money=paid). Ctrl-C to stop.\n")
 
     def fold(item: dict) -> None:
+        print("RAW " + json.dumps(item, ensure_ascii=False))  # learn the shape
         p = parse(item)
         print(f"  [{p['kind']}] from={p['from']} " +
               " ".join(f"{k}={v}" for k, v in p.items() if k not in ("kind", "from")))
@@ -133,7 +134,7 @@ def watch(muster_ts: int) -> None:
                 roster.setdefault(who, "in")
             print(f"    -> roster: {roster}")
 
-    stream(fold, idle_timeout=20)  # exit after 20s idle (turn-friendly for the spike)
+    stream(fold, idle_timeout=None)  # persistent; run backgrounded, kill when done
 
 
 if __name__ == "__main__":
