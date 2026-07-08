@@ -65,9 +65,12 @@ on the `web` and `signal-net` networks. Reference: `../tinsnip`, `../festers`.
 Loops 01-07 are all closed and archived (each folder has an archived.md and an
 [ARCHIVED] README heading, so /readthedocs skips them). **The gazette cloud
 refactor is COMPLETE** -- gazette runs on the OCI `gateway` box as tinsnip
-quadlets, publishing tQ26.H daily at 07:00 UK (first timed run 2026-07-08). No
-active loop. Feature web endpoints (historic reviews / insights / festers) are a
-separate future arc off the loop-06 serve skeleton.
+quadlets, publishing tQ26.H daily at 07:00 UK (first timed run 2026-07-08).
+
+A **new arc** opens at [08-music-graph](08-music-graph/README.md) `[~] observe` --
+a semi-permeable, PII-free music social graph fronted by `gazette.dynamicalsystem.com`,
+spanning gazette + festers (feeders) and runclub (privacy lineage). Currently in the
+Observe phase; see `08-music-graph/observe/observations.md`.
 
 | # | Loop | Status | Outcome |
 |---|------|--------|---------|
