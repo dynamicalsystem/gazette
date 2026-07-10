@@ -7,7 +7,10 @@ class Review:
         self.placing = placing
         self.publishers = []
         self.content = GitHub(chart, placing)
-        self.artist = self.content.item["artist"]
-        self.work = self.content.item["work"]
-        self.review = self.content.item["review"]
-        self.verdict = self.content.item["verdict"]
+        # .get, not [] -- a missing key is graded 'not_ready' by classify()
+        # and held quietly, rather than crashing the whole publish sweep.
+        item = self.content.item if isinstance(self.content.item, dict) else {}
+        self.artist = item.get("artist", "")
+        self.work = item.get("work", "")
+        self.review = item.get("review", "")
+        self.verdict = item.get("verdict", "")

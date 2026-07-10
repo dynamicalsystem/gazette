@@ -39,14 +39,15 @@ def test_verdict_value_is_empty(environment_variables):
     assert not content.validate_content()
 
 def test_github_series_is_missing(environment_variables):
-    from dynamicalsystem.gazette.content import GitHub
+    from dynamicalsystem.gazette.content import GitHub, ChartUnavailable
 
-    content = GitHub("nothing", 100)
-    assert not bool(content.item)
+    # a missing chart file (404) is now a loud fault, not a silent item=None
+    with raises(ChartUnavailable):
+        GitHub("nothing", 100)
 
 def test_github_content_is_missing(environment_variables):
-    from dynamicalsystem.gazette.content import GitHub
+    from dynamicalsystem.gazette.content import GitHub, ReviewNotReady
 
-    with raises(IndexError) as e:
-        _ = GitHub("test", 101)
-        assert e.value == "No review found for item 101 in series test."
+    # a placing past the end of the chart is "not written yet", held quietly
+    with raises(ReviewNotReady):
+        GitHub("test", 101)
