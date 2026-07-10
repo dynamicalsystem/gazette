@@ -1,66 +1,81 @@
-"""A publish/content failure must skip to the next target WITHOUT advancing
-the failed target's watermark.
+"""Publish-sweep fault semantics (pure unit tests -- Review, the publishers and
+watermarks are mocked, so nothing here touches GitHub, Signal or Bluesky).
 
-Pure unit tests: Review and the publisher/watermark machinery are mocked, so
-nothing here touches GitHub, Signal or Bluesky.
+The contract:
+  - "not written yet" (ReviewNotReady) is held QUIETLY and does not fail the run;
+  - a corrupt/unavailable chart, an invalid review, or a failed send is a FAULT:
+    it holds the watermark (never advances past a failure), keeps going to the
+    other targets, alerts the operator, and makes publish_once() return non-zero.
 """
 from types import SimpleNamespace
 from pytest import raises
 
 
 class _FakeContent:
-    def __init__(self, valid):
-        self._valid = valid
-        self.url = "https://example.test/tQ26.H.json"
+    def __init__(self, status):  # "ok" | "not_ready" | "invalid"
+        self._status = status
+        self.item = {"artist": "A", "work": "W", "review": "r", "verdict": "Buy."}
+
+    def classify(self):
+        return self._status
 
     def validate_content(self):
-        return self._valid
+        return self._status == "ok"
 
 
 class _FakeReview:
-    """Stand-in for review.Review with controllable validity."""
-
-    def __init__(self, chart, placing, valid):
+    def __init__(self, chart, placing, status):
         self.chart = chart
         self.placing = placing
-        self.content = _FakeContent(valid)
-        self.artist = "Artist" if valid else ""
-        self.work = "Work" if valid else ""
-        self.review = "review" if valid else ""
-        self.verdict = "Buy." if valid else ""
+        self.content = _FakeContent(status)
+        self.artist = "A"
+        self.work = "W"
+        self.review = "r"
+        self.verdict = "Buy." if status != "invalid" else "Buy"
 
 
 def _watermark(name="abyss", chart="tQ26.H", placing=100):
     return SimpleNamespace(name=name, chart=chart, placing=placing, target="dev")
 
 
-def test_invalid_content_raises_valueerror(monkeypatch):
-    """The fix: an unwritten review makes publisher construction raise
-    ValueError (the signal main() uses to skip without updating)."""
+def _patch_review(monkeypatch, status):
     from dynamicalsystem.gazette import publishers
 
     monkeypatch.setattr(
         publishers,
         "Review",
-        lambda chart, placing: _FakeReview(chart, placing, valid=False),
+        lambda chart, placing: _FakeReview(chart, placing, status),
     )
-
-    with raises(ValueError):
-        publishers.Validator(_watermark())
 
 
 def test_valid_content_constructs(monkeypatch):
-    """Guard: valid content still constructs a publisher and keeps the review."""
     from dynamicalsystem.gazette import publishers
 
-    monkeypatch.setattr(
-        publishers,
-        "Review",
-        lambda chart, placing: _FakeReview(chart, placing, valid=True),
-    )
-
+    _patch_review(monkeypatch, "ok")
     p = publishers.Validator(_watermark())
     assert p.content.verdict == "Buy."
+
+
+def test_not_ready_raises_reviewnotready(monkeypatch):
+    """An unwritten review makes construction raise ReviewNotReady -- the quiet
+    signal publish_once() uses to hold the watermark without failing the run."""
+    from dynamicalsystem.gazette import publishers
+    from dynamicalsystem.gazette.content import ReviewNotReady
+
+    _patch_review(monkeypatch, "not_ready")
+    with raises(ReviewNotReady):
+        publishers.Validator(_watermark())
+
+
+def test_invalid_verdict_raises_reviewinvalid(monkeypatch):
+    """A written-but-malformed review (bad verdict) is a fault, distinct from
+    'not written yet'."""
+    from dynamicalsystem.gazette import publishers
+    from dynamicalsystem.gazette.content import ReviewInvalid
+
+    _patch_review(monkeypatch, "invalid")
+    with raises(ReviewInvalid):
+        publishers.Validator(_watermark())
 
 
 def _fake_publisher(name, ok):
@@ -73,28 +88,56 @@ def _fake_publisher(name, ok):
     return p
 
 
-def test_main_continues_past_failures_without_updating(monkeypatch):
-    """The invariant: a content failure (raise) and a publish failure (False)
-    are both skipped, the loop reaches later targets, and neither failed
-    target's watermark is decremented."""
+def test_not_ready_is_quiet_and_run_stays_clean(monkeypatch):
+    """A not-ready target and a successful target: the run is clean (rc 0), no
+    alert, the good target advances, the not-ready one is untouched."""
     import dynamicalsystem.gazette as gazette
+    from dynamicalsystem.gazette.content import ReviewNotReady
 
-    failer = _fake_publisher("failer", ok=False)
     good = _fake_publisher("good", ok=True)
+    alerts = []
 
     def fake_create(watermark):
-        if watermark == "empty":
-            raise ValueError("Content missing for tQ26.H.100")
-        return {"failer": failer, "good": good}[watermark]
+        if watermark == "notready":
+            raise ReviewNotReady("not written yet")
+        return {"good": good}[watermark]
 
-    # order matters: the failures come first, so a working `good` at the end
-    # proves the loop was not aborted by them.
-    monkeypatch.setattr(gazette, "watermarks", lambda: ["empty", "failer", "good"])
+    monkeypatch.setattr(gazette, "watermarks", lambda: ["notready", "good"])
     monkeypatch.setattr(gazette, "create_publisher", fake_create)
+    monkeypatch.setattr(gazette, "send_alert", lambda msg: alerts.append(msg))
 
     rc = gazette.publish_once()
 
-    assert rc == 0                    # no crash
-    assert good.updated is True       # loop reached the later target and advanced it
-    assert failer.updated is False    # publish()->False did not decrement
-    # the "empty" target raised before any watermark existed -> nothing to update
+    assert rc == 0
+    assert good.updated is True
+    assert alerts == []  # quiet: not-ready is not a fault
+
+
+def test_faults_are_loud_hold_and_do_not_abort(monkeypatch):
+    """A corrupt chart and a failed send are both faults: the sweep continues to
+    the good target (which advances), neither faulted watermark is decremented,
+    exactly one alert is sent, and rc is non-zero."""
+    import dynamicalsystem.gazette as gazette
+    from dynamicalsystem.gazette.content import ChartCorrupt
+
+    failer = _fake_publisher("failer", ok=False)  # send returns False -> fault
+    good = _fake_publisher("good", ok=True)
+    alerts = []
+
+    def fake_create(watermark):
+        if watermark == "corrupt":
+            raise ChartCorrupt("tQ26.H is not valid JSON")
+        return {"failer": failer, "good": good}[watermark]
+
+    # corrupt + failed-send come first; a working `good` last proves no abort.
+    monkeypatch.setattr(gazette, "watermarks", lambda: ["corrupt", "failer", "good"])
+    monkeypatch.setattr(gazette, "create_publisher", fake_create)
+    monkeypatch.setattr(gazette, "send_alert", lambda msg: alerts.append(msg))
+
+    rc = gazette.publish_once()
+
+    assert rc == 1                    # loud: the run failed
+    assert good.updated is True       # reached and advanced the later target
+    assert failer.updated is False    # a failed send did not decrement
+    assert len(alerts) == 1           # one summary alert for the whole sweep
+    assert "corrupt" in alerts[0] and "failer" in alerts[0]

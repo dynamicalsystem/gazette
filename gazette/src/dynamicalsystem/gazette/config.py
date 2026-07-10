@@ -34,6 +34,11 @@ class Settings(BaseSettings):
     signal_url: str = ""
     signal_identity: str = ""
 
+    # operational alerts: a Signal recipient (number or group id) that gets a
+    # message when a publish sweep holds any fault. Unset -> no alert is sent
+    # (the sweep still exits non-zero). Optional so dev/dry-run stays silent.
+    signal_ops_target: str = ""
+
     # state
     data_folder: str = ""
     watermark_file: str = "watermarks.json"

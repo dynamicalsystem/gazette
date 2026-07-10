@@ -8,12 +8,14 @@ from dynamicalsystem.gazette.log import logger
 from dynamicalsystem.gazette.utils import possessive, url_join
 from dynamicalsystem.gazette.review import Review
 from dynamicalsystem.gazette.watermarks import Watermark
+from dynamicalsystem.gazette.content import ReviewInvalid, ReviewNotReady
 
 
 def create_publisher(watermark: str):
     w = Watermark(watermark)
     if w.placing <= 0:
-        raise ValueError(f"Chart complete for {watermark} (placing={w.placing})")
+        # walked off the end of the chart -- benign, hold quietly
+        raise ReviewNotReady(f"Chart complete for {watermark} (placing={w.placing})")
     _class = globals()[w.publisher]  # todo: this is a bit of a hack
 
     return _class(w)
@@ -29,13 +31,18 @@ class Publisher(abc.ABC):
         self.chart = review.chart
         self.placing = review.placing
 
-        if review.content.validate_content():
+        # Split "not written yet" (benign, hold quietly) from "written wrong"
+        # (a fault). Both skip this target without decrementing its watermark.
+        status = review.content.classify()
+        if status == "ok":
             self.content = review
+        elif status == "invalid":
+            raise ReviewInvalid(
+                f"Review {self.chart}.{self.placing} has an invalid verdict: "
+                f"{review.verdict!r}"
+            )
         else:
-            # No usable review (empty/invalid content). Raise ValueError so
-            # main() skips to the next target WITHOUT decrementing this
-            # watermark -- the placing is retried once the review is written.
-            raise ValueError(f"Content missing for {self.chart}.{self.placing}")
+            raise ReviewNotReady(f"Review {self.chart}.{self.placing} not written yet.")
 
     @abc.abstractmethod
     def publish(self):
