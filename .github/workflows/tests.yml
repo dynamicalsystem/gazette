@@ -1,10 +1,11 @@
 name: offline tests
 
 # gazette had no PR gate: the publish logic shipped untested by CI. This runs the
-# fast, no-secrets, no-live-service subset on every PR so a regression in the
-# publish sweep or the content taxonomy is caught before merge. The live
-# integration tests (Bluesky / Signal / GitHub) still run locally / opt-in until
-# the offline-vs-integration split lands (see ooda test-suite-repair item).
+# self-contained subset on every PR so a regression in the publish sweep or the
+# content taxonomy is caught before merge. Excluded until the offline-vs-
+# integration split lands (see ooda test-suite-repair item): the Bluesky/Signal/
+# GitHub integration tests (secrets + live services) and test_watermarks/
+# test_environment (which read local on-disk state absent on a fresh runner).
 on:
   pull_request:
   workflow_dispatch:
@@ -22,7 +23,6 @@ jobs:
           uv run --frozen pytest \
             pytests/src/dynamicalsystem/pytests/test_publish_failures.py \
             pytests/src/dynamicalsystem/pytests/test_content_faults.py \
-            pytests/src/dynamicalsystem/pytests/test_watermarks.py \
             pytests/src/dynamicalsystem/pytests/test_config.py \
             pytests/src/dynamicalsystem/pytests/test_utils.py \
             -q
