@@ -67,10 +67,10 @@ Loops 01-07 are all closed and archived (each folder has an archived.md and an
 refactor is COMPLETE** -- gazette runs on the OCI `gateway` box as tinsnip
 quadlets, publishing tQ26.H daily at 07:00 UK (first timed run 2026-07-08).
 
-A **new arc** opens at [08-music-graph](08-music-graph/README.md) `[~] observe` --
-a semi-permeable, PII-free music social graph fronted by `gazette.dynamicalsystem.com`,
-spanning gazette + festers (feeders) and runclub (privacy lineage). Currently in the
-Observe phase; see `08-music-graph/observe/observations.md`.
+A **new arc** has migrated to [github.com/DynamicalSystem/musters](https://github.com/DynamicalSystem/musters) --
+loop 08 (music-graph) `[~] observe` is now a semi-permeable, PII-free music social graph
+fronted by `gazette.dynamicalsystem.com`, spanning gazette + festers (feeders) and runclub
+(privacy lineage). See the musters repo for the full observe-orient-act loop.
 
 | # | Loop | Status | Outcome |
 |---|------|--------|---------|
