@@ -91,8 +91,13 @@ Loops 1-4 are testable entirely locally (dry-run). Phase 2 needs the `gateway` b
 | -- | test-suite repair | any | split fast offline units from opt-in integration (was old loop 05). Note: `tQ25.H` NO LONGER 404s (content published since); remaining issue is tests hitting live Bluesky/Signal. |
 | -- | feature endpoints (separate arc) | 06 | historic reviews / insights / random-listening / festers integration -- each its own loop. "Historic reviews" first needs a data-source decision (today content is fetched per-run per-chart from GitHub raw; serving history needs a store or enumeration). |
 
-## Go-live readiness (tQ26.H)
+## Go-live (tQ26.H) -- DONE 2026-07-08
 
-PAT [x] regenerated + working. Signal path + WireGuard [x] proven (real abyss send
-2026-07-01). Remaining blocker: tQ26.H content not yet published (still 404). When
-it drops: `cp watermarks.tQ26.H.template.json watermarks.prod.json` then run.
+gazette is live on the OCI `gateway` box, publishing tQ26.H daily at 07:00 UK.
+First timed run verified 2026-07-08 (loop 07 close, commit `5ff3514`).
+
+- PAT [x] regenerated + working.
+- Signal path + WireGuard [x] proven (real abyss send 2026-07-01).
+- tQ26.H content [x] published (was 404 pre-go-live; resolved).
+- Prod watermark state [x] lives on the box as a mounted volume (not in-repo);
+  `watermarks.example.json` is the local shape reference.
