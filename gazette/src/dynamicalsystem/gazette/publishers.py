@@ -65,13 +65,14 @@ class Bluesky(Publisher):
         self.logger.debug("__init__")
 
     def publish(self):
-        if (size := len(self._formatter())) > 300:
-            self.logger.error(
-                f"Message too long: {size} chars for {self.chart}.{self.placing}"
+        text = self._formatter()
+        if len(text) > 300:
+            text = text[:297] + "..."
+            self.logger.warning(
+                f"Truncated Bluesky post to 300 chars for {self.chart}.{self.placing}"
             )
-            return False
 
-        self._post = self.client.send_post(self._formatter())
+        self._post = self.client.send_post(text)
 
         if self.content.verdict == "Buy." and hasattr(self.content, 'url'):
             reply = client_utils.TextBuilder

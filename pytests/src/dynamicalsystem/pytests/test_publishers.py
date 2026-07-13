@@ -35,19 +35,30 @@ def test_signal_logger(environment_variables):
         _.logger.exception(e)
 
 
-def test_bluesky_long_message_is_rejected(environment_variables, monkeypatch):
-    """A Bluesky post over 300 chars must return False, not raise."""
+def test_bluesky_long_message_is_truncated(environment_variables, monkeypatch):
+    """A Bluesky post over 300 chars is truncated to 300 chars and published."""
     from atproto import Client
+    from types import SimpleNamespace
     from dynamicalsystem.gazette.log import logger
     from dynamicalsystem.gazette.publishers import Bluesky
 
     monkeypatch.setattr(Client, "login", lambda *args, **kwargs: None)
 
+    sent = []
+    monkeypatch.setattr(
+        Client, "send_post", lambda self, text: sent.append(text) or SimpleNamespace(uri="at://test")
+    )
+
     publisher = Bluesky.__new__(Bluesky)
     publisher.chart = "tQ26.H"
     publisher.placing = 100
     publisher.logger = logger
+    publisher.client = Client()
+    publisher.content = SimpleNamespace(verdict="Ignore.")
     publisher._formatter = lambda: "x" * 301
 
-    assert publisher.publish() is False
+    assert publisher.publish() is True
+    assert len(sent) == 1
+    assert len(sent[0]) == 300
+    assert sent[0].endswith("...")
 
