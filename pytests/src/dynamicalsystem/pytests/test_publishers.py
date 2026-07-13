@@ -34,3 +34,20 @@ def test_signal_logger(environment_variables):
     except Exception as e:
         _.logger.exception(e)
 
+
+def test_bluesky_long_message_is_rejected(environment_variables, monkeypatch):
+    """A Bluesky post over 300 chars must return False, not raise."""
+    from atproto import Client
+    from dynamicalsystem.gazette.log import logger
+    from dynamicalsystem.gazette.publishers import Bluesky
+
+    monkeypatch.setattr(Client, "login", lambda *args, **kwargs: None)
+
+    publisher = Bluesky.__new__(Bluesky)
+    publisher.chart = "tQ26.H"
+    publisher.placing = 100
+    publisher.logger = logger
+    publisher._formatter = lambda: "x" * 301
+
+    assert publisher.publish() is False
+

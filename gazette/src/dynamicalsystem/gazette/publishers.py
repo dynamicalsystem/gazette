@@ -66,7 +66,9 @@ class Bluesky(Publisher):
 
     def publish(self):
         if (size := len(self._formatter())) > 300:
-            self.logger.error(f"Message too long: {size} {self.message}")
+            self.logger.error(
+                f"Message too long: {size} chars for {self.chart}.{self.placing}"
+            )
             return False
 
         self._post = self.client.send_post(self._formatter())
