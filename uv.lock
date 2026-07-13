@@ -177,6 +177,7 @@ source = { editable = "gazette" }
 dependencies = [
     { name = "atproto" },
     { name = "fastapi" },
+    { name = "grapheme" },
     { name = "pydantic-settings" },
     { name = "requests" },
     { name = "uvicorn", extra = ["standard"] },
@@ -186,6 +187,7 @@ dependencies = [
 requires-dist = [
     { name = "atproto", specifier = ">=0.0.56" },
     { name = "fastapi", specifier = ">=0.110" },
+    { name = "grapheme", specifier = ">=0.6.0" },
     { name = "pydantic-settings", specifier = ">=2.0" },
     { name = "requests", specifier = ">=2.32.3" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.29" },
@@ -237,6 +239,12 @@ dev = [
     { name = "dynamicalsystem-pytests", editable = "pytests" },
     { name = "pytest", specifier = ">=8.3.4" },
 ]
+
+[[package]]
+name = "grapheme"
+version = "0.6.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ce/e7/bbaab0d2a33e07c8278910c1d0d8d4f3781293dfbc70b5c38197159046bf/grapheme-0.6.0.tar.gz", hash = "sha256:44c2b9f21bbe77cfb05835fec230bd435954275267fea1858013b102f8603cca", size = 207306, upload-time = "2020-03-07T17:13:55.492Z" }
 
 [[package]]
 name = "h11"

@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "atproto>=0.0.56",
+    "grapheme>=0.6.0",
     "pydantic-settings>=2.0",
     "requests>=2.32.3",
     "fastapi>=0.110",

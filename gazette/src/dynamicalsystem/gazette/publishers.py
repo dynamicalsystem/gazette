@@ -1,5 +1,6 @@
 import abc
 from atproto import Client, client_utils
+from grapheme import length as grapheme_length
 from re import search
 from time import sleep
 from requests import get, post, RequestException
@@ -58,21 +59,26 @@ class Publisher(abc.ABC):
         )
 
 class Bluesky(Publisher):
+    # Bluesky's app-level post limit is 300 Unicode extended grapheme clusters,
+    # not raw bytes or Python code points. The atproto wire model allows 3000
+    # chars; the 300-grapheme limit is enforced by the AppView/PDS.
+    MAX_POST_GRAPHEMES = 300
+
     def __init__(self, watermark: Watermark) -> None:
         super().__init__(watermark)
+
+        if (size := grapheme_length(self._formatter())) > self.MAX_POST_GRAPHEMES:
+            raise ReviewInvalid(
+                f"Review {self.chart}.{self.placing} is {size} graphemes; "
+                f"Bluesky limit is {self.MAX_POST_GRAPHEMES}."
+            )
+
         self.client = Client(base_url=self.config.bluesky_url)
         self.client.login(self.config.bluesky_username, self.config.bluesky_password)
         self.logger.debug("__init__")
 
     def publish(self):
-        text = self._formatter()
-        if len(text) > 300:
-            text = text[:297] + "..."
-            self.logger.warning(
-                f"Truncated Bluesky post to 300 chars for {self.chart}.{self.placing}"
-            )
-
-        self._post = self.client.send_post(text)
+        self._post = self.client.send_post(self._formatter())
 
         if self.content.verdict == "Buy." and hasattr(self.content, 'url'):
             reply = client_utils.TextBuilder

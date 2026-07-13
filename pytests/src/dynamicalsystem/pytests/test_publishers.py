@@ -35,30 +35,32 @@ def test_signal_logger(environment_variables):
         _.logger.exception(e)
 
 
-def test_bluesky_long_message_is_truncated(environment_variables, monkeypatch):
-    """A Bluesky post over 300 chars is truncated to 300 chars and published."""
-    from atproto import Client
+def test_bluesky_long_message_raises_review_invalid(environment_variables, monkeypatch):
+    """A Bluesky post over 300 graphemes is rejected as invalid content."""
+    from pytest import raises
     from types import SimpleNamespace
-    from dynamicalsystem.gazette.log import logger
-    from dynamicalsystem.gazette.publishers import Bluesky
+    from dynamicalsystem.gazette import publishers
+    from dynamicalsystem.gazette.content import ReviewInvalid
 
-    monkeypatch.setattr(Client, "login", lambda *args, **kwargs: None)
+    class _LongReview:
+        def __init__(self, chart, placing):
+            self.chart = chart
+            self.placing = placing
+            self.content = self
+            self.artist = "A"
+            self.work = "W"
+            self.review = "x" * 400
+            self.verdict = "Buy."
 
-    sent = []
+        def classify(self):
+            return "ok"
+
     monkeypatch.setattr(
-        Client, "send_post", lambda self, text: sent.append(text) or SimpleNamespace(uri="at://test")
+        publishers, "Review", lambda chart, placing: _LongReview(chart, placing)
     )
 
-    publisher = Bluesky.__new__(Bluesky)
-    publisher.chart = "tQ26.H"
-    publisher.placing = 100
-    publisher.logger = logger
-    publisher.client = Client()
-    publisher.content = SimpleNamespace(verdict="Ignore.")
-    publisher._formatter = lambda: "x" * 301
-
-    assert publisher.publish() is True
-    assert len(sent) == 1
-    assert len(sent[0]) == 300
-    assert sent[0].endswith("...")
+    with raises(ReviewInvalid):
+        publishers.Bluesky(
+            SimpleNamespace(name="bluesky", chart="tQ26.H", placing=100)
+        )
 
