@@ -117,7 +117,7 @@ The Signal and Bluesky symptoms are independent. No shared root cause.
 - [x] Delete the truncated Bluesky post and reset the `bluesky` watermark to 97.
 - [x] Add a 300-grapheme Bluesky check to the content repo push gate
       (`DynamicalSystem/content` commit `6fe1a2d`).
-- [ ] Shorten the tQ26.H.97 review so it is within the 300-grapheme limit.
+- [x] Shorten the tQ26.H.97 review so it is within the 300-grapheme limit.
 - [ ] Observe the next scheduled runs to confirm both paths are healthy.
 
 ### Verification (2026-07-13 18:46 UTC)
@@ -130,8 +130,7 @@ The Signal and Bluesky symptoms are independent. No shared root cause.
   reset to 97.
 - Content repo `validate_charts.py` now checks Bluesky-formatted length on every
   push; CI installs `grapheme>=0.6.0` before running the validator.
-- tQ26.H.97 still formats to 329 graphemes, so the next Bluesky publish will be
-  rejected until the review text is shortened.
+- tQ26.H.97 now formats to <= 300 graphemes and passes the content-repo DQ gate.
 
 ## Outcomes
 
@@ -152,6 +151,6 @@ Tests:
 - [x] Fix is applied and image is deployed on the gateway.
 - [x] Long Bluesky posts raise `ReviewInvalid` instead of being truncated.
 - [x] Source-side DQ gate in the content repo checks Bluesky-formatted length.
-- [ ] tQ26.H.97 review is shortened to <= 300 graphemes.
+- [x] tQ26.H.97 review is shortened to <= 300 graphemes.
 - [ ] Bluesky path publishes tQ26.H.97 cleanly at the next scheduled run.
 - [ ] Bluesky path continues to fire normally for 48 hours after recovery.
