@@ -56,8 +56,9 @@ paths.
 - Bluesky's app-level post limit is 300 Unicode extended grapheme clusters, not
   raw characters or bytes. The atproto wire limit is 3000 chars.
 - A manual run on 2026-07-13 published a truncated tQ26.H.97 Bluesky post. That
-  post has been deleted, and the `bluesky` watermark has been reset to 96 so the
-  next scheduled run publishes tQ26.H.96 cleanly.
+  post has been deleted and the `bluesky` watermark has been reset to 97.
+- The tQ26.H.97 review is still 329 graphemes when formatted for Bluesky, so the
+  new enforcement path will reject it until the review text is shortened.
 
 ## Orientation
 
@@ -79,6 +80,9 @@ paths.
    the content and bypasses the existing `ReviewInvalid` quality gate. The
    correct behaviour is to reject the long review during publisher construction
    so it is held back rather than mangled and published.
+4. **The fix needs a source-side backstop.** The content repo already validates
+   chart JSON on every push. The same gate should check Bluesky-formatted length
+   so a long review gets a red CI status before it can reach gazette.
 
 The Signal and Bluesky symptoms are independent. No shared root cause.
 
@@ -88,11 +92,13 @@ The Signal and Bluesky symptoms are independent. No shared root cause.
 2. Enforce Bluesky's 300-grapheme limit by raising `ReviewInvalid` in the
    `Bluesky` publisher constructor. Do not truncate; hold the review back so it
    can be rewritten or split.
-3. Build and push a new `ghcr.io/dynamicalsystem/gazette:latest` image.
-4. Let the gateway's `podman auto-update` pull the fixed image. Do not run a
+3. Add the same 300-grapheme check to the content repo's `validate_charts.py`
+   so the push gate catches long reviews before they reach production.
+4. Build and push a new `ghcr.io/dynamicalsystem/gazette:latest` image.
+5. Let the gateway's `podman auto-update` pull the fixed image. Do not run a
    manual production publish sweep; wait for the scheduled 07:00 Europe/London
    timer.
-5. Do **not** change the Signal path: it is already firing once per event; the
+6. Do **not** change the Signal path: it is already firing once per event; the
    duplicate logs are a harmless journald duplication. We can optionally clean
    up the double-logging later, but it is not blocking delivery.
 
@@ -108,19 +114,24 @@ The Signal and Bluesky symptoms are independent. No shared root cause.
 - [x] Commit and push the fixes to `main` (commit `f0984ab`).
 - [x] Build and push the multi-arch image to GHCR.
 - [x] Trigger `podman-auto-update.service` on the gateway to pull the fixed image.
-- [x] Delete the truncated Bluesky post and reset the `bluesky` watermark to 96.
+- [x] Delete the truncated Bluesky post and reset the `bluesky` watermark to 97.
+- [x] Add a 300-grapheme Bluesky check to the content repo push gate
+      (`DynamicalSystem/content` commit `6fe1a2d`).
+- [ ] Shorten the tQ26.H.97 review so it is within the 300-grapheme limit.
 - [ ] Observe the next scheduled runs to confirm both paths are healthy.
 
-### Verification (2026-07-13 17:42 UTC)
+### Verification (2026-07-13 18:46 UTC)
 
 - CI `release.yml` run `29271264751` built and pushed
   `ghcr.io/dynamicalsystem/gazette:latest` successfully.
 - Gateway `podman-auto-update.service` pulled the new image and notified Abyss
   (HTTP 201).
 - The truncated tQ26.H.97 Bluesky post was deleted and the `bluesky` watermark
-  reset to 96.
-- No manual production publish sweep was run after the reset. The next Bluesky
-  publish will be tQ26.H.96 at the scheduled 07:00 Europe/London run.
+  reset to 97.
+- Content repo `validate_charts.py` now checks Bluesky-formatted length on every
+  push; CI installs `grapheme>=0.6.0` before running the validator.
+- tQ26.H.97 still formats to 329 graphemes, so the next Bluesky publish will be
+  rejected until the review text is shortened.
 
 ## Outcomes
 
@@ -137,8 +148,10 @@ Tests:
 
 Tests:
 - [x] Root cause of Bluesky silence is identified (`AttributeError` on long
-      message log line, then message length rejection).
+      message line, then message length rejection).
 - [x] Fix is applied and image is deployed on the gateway.
 - [x] Long Bluesky posts raise `ReviewInvalid` instead of being truncated.
-- [ ] Bluesky path publishes tQ26.H.96 cleanly at the next scheduled run.
+- [x] Source-side DQ gate in the content repo checks Bluesky-formatted length.
+- [ ] tQ26.H.97 review is shortened to <= 300 graphemes.
+- [ ] Bluesky path publishes tQ26.H.97 cleanly at the next scheduled run.
 - [ ] Bluesky path continues to fire normally for 48 hours after recovery.
