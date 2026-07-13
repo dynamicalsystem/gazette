@@ -52,8 +52,12 @@ paths.
 - The bug is in `gazette/src/dynamicalsystem/gazette/publishers.py` line 69:
   `self.logger.error(f"Message too long: {size} {self.message}")` references
   `self.message`, which does not exist on the `Bluesky` class.
-- The current watermark for `bluesky` is tQ26.H.97; the message at that placing
-  exceeds the 300-char limit and triggers the buggy log line every run.
+- The watermark for `bluesky` was tQ26.H.97 while the Bluesky path was stuck.
+- Bluesky's app-level post limit is 300 Unicode extended grapheme clusters, not
+  raw characters or bytes. The atproto wire limit is 3000 chars.
+- A manual run on 2026-07-13 published a truncated tQ26.H.97 Bluesky post. That
+  post has been deleted, and the `bluesky` watermark has been reset to 96 so the
+  next scheduled run publishes tQ26.H.96 cleanly.
 
 ## Orientation
 
@@ -65,22 +69,29 @@ paths.
    and `signal-cli-rest-api` logs show exactly one `/v2/send` per target per run.
    The perceived duplicate is a logging artifact, not duplicate delivery.
 2. **Bluesky silence: code regression in the 2026-07-10 image.** When a Bluesky
-   message exceeds 300 chars, the publisher tries to log `self.message` and
-   raises `AttributeError`. `publish_once()` catches this as an unexpected fault,
-   holds the watermark, and the same placing is retried every day with the same
+   message exceeded 300 chars, the publisher tried to log `self.message` and
+   raised `AttributeError`. `publish_once()` caught this as an unexpected fault,
+   held the watermark, and the same placing was retried every day with the same
    failure. The tQ26.H.97 review is long enough to hit the limit, so Bluesky has
    been stuck since the new image was pulled.
+3. **Truncation is the wrong fix.** Bluesky's limit is 300 Unicode extended
+   grapheme clusters, not Python `len()`. Silently truncating a review rewrites
+   the content and bypasses the existing `ReviewInvalid` quality gate. The
+   correct behaviour is to reject the long review during publisher construction
+   so it is held back rather than mangled and published.
 
-The two symptoms are independent. No shared root cause.
+The Signal and Bluesky symptoms are independent. No shared root cause.
 
 ## Decision
 
 1. Fix the Bluesky publisher bug: replace `self.message` with a valid log line.
-2. Truncate Bluesky posts to 300 chars (Bluesky's limit) instead of returning
-   `False`, so a long review does not block the path indefinitely.
+2. Enforce Bluesky's 300-grapheme limit by raising `ReviewInvalid` in the
+   `Bluesky` publisher constructor. Do not truncate; hold the review back so it
+   can be rewritten or split.
 3. Build and push a new `ghcr.io/dynamicalsystem/gazette:latest` image.
-4. Let the gateway's `podman auto-update` pull the fixed image for the next
-   scheduled run (or trigger it manually for faster recovery).
+4. Let the gateway's `podman auto-update` pull the fixed image. Do not run a
+   manual production publish sweep; wait for the scheduled 07:00 Europe/London
+   timer.
 5. Do **not** change the Signal path: it is already firing once per event; the
    duplicate logs are a harmless journald duplication. We can optionally clean
    up the double-logging later, but it is not blocking delivery.
@@ -92,22 +103,24 @@ The two symptoms are independent. No shared root cause.
 - [x] Identify the exact Signal duplicate event and compare with normal firings.
 - [x] Confirm root causes for both paths.
 - [x] Fix `self.message` bug in `gazette/src/dynamicalsystem/gazette/publishers.py`.
-- [x] Add regression test for Bluesky long-message path.
-- [x] Commit and push the fixes to `main` (commits `ca35e89`, `96477b2`).
+- [x] Replace Bluesky truncation with a 300-grapheme `ReviewInvalid` check.
+- [x] Add `grapheme>=0.6.0` dependency and update regression test.
+- [x] Commit and push the fixes to `main` (commit `f0984ab`).
 - [x] Build and push the multi-arch image to GHCR.
-- [x] Verify the gateway pulls the new image and the next publish run succeeds
-      for Bluesky.
-- [ ] Observe the next 48 hours to confirm both paths are healthy.
+- [x] Trigger `podman-auto-update.service` on the gateway to pull the fixed image.
+- [x] Delete the truncated Bluesky post and reset the `bluesky` watermark to 96.
+- [ ] Observe the next scheduled runs to confirm both paths are healthy.
 
-### Verification (2026-07-13 10:23 UTC)
+### Verification (2026-07-13 17:42 UTC)
 
-- Manually triggered `gazette-publish.service` on `gateway` after auto-update.
-- Bluesky: published `tQ26.H.97` (truncated from 338 to 300 chars) and watermark
-  advanced from 97 to 96.
-- Signal: published `tQ26.H.93` for `calendrical_rot` and `josh` (one retry on
-  transient `SocketException`); watermarks advanced from 93 to 92.
-- Watermark file now shows `bluesky` at 96 and all Signal targets at 92.
-- No faults held; run completed cleanly.
+- CI `release.yml` run `29271264751` built and pushed
+  `ghcr.io/dynamicalsystem/gazette:latest` successfully.
+- Gateway `podman-auto-update.service` pulled the new image and notified Abyss
+  (HTTP 201).
+- The truncated tQ26.H.97 Bluesky post was deleted and the `bluesky` watermark
+  reset to 96.
+- No manual production publish sweep was run after the reset. The next Bluesky
+  publish will be tQ26.H.96 at the scheduled 07:00 Europe/London run.
 
 ## Outcomes
 
@@ -125,6 +138,7 @@ Tests:
 Tests:
 - [x] Root cause of Bluesky silence is identified (`AttributeError` on long
       message log line, then message length rejection).
-- [x] Fix is applied and verified in production.
-- [x] Bluesky path fires successfully at least once after the fix.
+- [x] Fix is applied and image is deployed on the gateway.
+- [x] Long Bluesky posts raise `ReviewInvalid` instead of being truncated.
+- [ ] Bluesky path publishes tQ26.H.96 cleanly at the next scheduled run.
 - [ ] Bluesky path continues to fire normally for 48 hours after recovery.
