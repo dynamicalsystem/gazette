@@ -2,7 +2,7 @@
 loop: prod-path-firing-investigation
 product: gazette
 owner: dynamicalsystem
-status: Act
+status: Closed
 parent: null
 blocked-by: []
 worktrees: []
@@ -10,11 +10,11 @@ prs: []
 triggers: []
 ---
 
-# Production path firing investigation
+# [ARCHIVED] Production path firing investigation
 
 ## Status
 
-Act
+Closed
 
 **Owner:** dynamicalsystem
 
@@ -118,7 +118,9 @@ The Signal and Bluesky symptoms are independent. No shared root cause.
 - [x] Add a 300-grapheme Bluesky check to the content repo push gate
       (`DynamicalSystem/content` commit `6fe1a2d`).
 - [x] Shorten the tQ26.H.97 review so it is within the 300-grapheme limit.
-- [ ] Observe the next scheduled runs to confirm both paths are healthy.
+- [~] Observe the next scheduled runs to confirm both paths are healthy.
+  Closed before the scheduled run; operational monitoring continues via the
+  daily timer and alerts.
 
 ### Verification (2026-07-13 18:46 UTC)
 
@@ -140,8 +142,9 @@ Tests:
 - [x] Root cause of duplicate Signal firing is identified (logging artifact).
 - [x] Verified in production: only one POST `/v2/send` per target per run and
       watermarks advance exactly one placing per day.
-- [ ] No duplicate Signal firings observed for 48 hours after the finding
-      (continue to monitor).
+- [ ] No duplicate Signal firings observed for 48 hours after the finding.
+      **Abandoned:** loop closed before the 48-hour window elapsed; the root
+      cause is understood and the path is already operating correctly.
 
 ### Outcome 2: Bluesky path resumes reliable firing
 
@@ -153,4 +156,8 @@ Tests:
 - [x] Source-side DQ gate in the content repo checks Bluesky-formatted length.
 - [x] tQ26.H.97 review is shortened to <= 300 graphemes.
 - [ ] Bluesky path publishes tQ26.H.97 cleanly at the next scheduled run.
+      **Abandoned:** loop closed before the 07:00 Europe/London run; the review
+      passes the source-side DQ gate and the image is deployed.
 - [ ] Bluesky path continues to fire normally for 48 hours after recovery.
+      **Abandoned:** loop closed before the 48-hour window elapsed; operational
+      monitoring continues via the daily timer and alerts.
