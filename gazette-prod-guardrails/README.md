@@ -2,7 +2,7 @@
 loop: gazette-prod-guardrails
 product: gazette
 owner: dynamicalsystem
-status: Orient
+status: Decide
 parent: null
 blocked-by: []
 worktrees: []
@@ -14,7 +14,7 @@ triggers: []
 
 ## Status
 
-Orient
+Decide
 
 **Owner:** dynamicalsystem
 
@@ -116,28 +116,64 @@ item for when publisher integration testing becomes routine.
 
 ## Decision
 
-We will design and implement operational guardrails for gazette publishing that:
+We will implement the first cut now: guardrails **A, B, F, G, H**.
 
-1. Make dry-run the default and prod mutation an explicit, logged opt-in
-   (guardrails A and B).
-2. Back up watermarks and log every change so recovery is safe and auditable
-   (guardrail F).
-3. Define and document when prod access is acceptable and how to recover
-   watermark state (guardrail G).
-4. Add project-level instructions that prohibit AI assistants from iterating on
-   prod without explicit human confirmation (guardrail H).
+### 1. Default `gazette publish` to dry-run (A)
+
+- `gazette publish` with no flags runs every configured watermark through the
+  `Validator` publisher. It logs what would be published but does not post to
+  Signal, Bluesky, or any other live target.
+- `gazette publish --live` opts in to real publishers, but only if the env guard
+  is also satisfied (see #2).
+- `gazette serve` is unchanged; it does not trigger publishes and needs no
+  opt-in.
+
+### 2. Env guard for live publishers (B)
+
+- Non-Validator publishers refuse to initialise unless `GAZETTE_LIVE=1` is set
+  in the environment.
+- `gazette publish --live` without `GAZETTE_LIVE=1` exits with a clear error and
+  does not load credentials.
+- The Quadlet timer unit sets `GAZETTE_LIVE=1` intentionally; no other service
+  or shell profile sets it by default.
+
+### 3. Watermark backup + audit log (F)
+
+- Before `Watermark.update()` writes `watermarks.json`, copy it to
+  `watermarks.json.bak` in the same directory.
+- Append a line to `watermarks.log` in the same directory with:
+  `YYYY-MM-DDTHH:MM:SSZ watermark=<name> old=<chart>.<old> new=<chart>.<new>`.
+- The backup is intentionally a single file; in a panic, the operator knows
+  exactly where to find the last known-good state.
+
+### 4. Operational runbook (G)
+
+- Create `docs/runbooks/prod-publishing.md` in the repo covering:
+  - How to validate a change with `gazette publish` (dry-run).
+  - When live prod access is permitted and who must approve.
+  - How to advance or reset a watermark safely using the existing code.
+  - How to restore `watermarks.json` from `watermarks.json.bak`.
+
+### 5. Project AI instructions (H)
+
+- Create `/work/AGENTS.md` (project-scope) that preserves the existing user-scope
+  rules and adds a "Production publishing" section requiring:
+  - Default to dry-run / `Validator` for any publish command.
+  - Explicit human confirmation before any live post or prod watermark change.
+  - No iteration on prod; isolate and reproduce offline or in a non-prod target.
 
 ## Action
 
 - [x] Create this loop to capture the guardrail work.
 - [x] Enumerate candidate guardrails and evaluate them against the incident.
-- [ ] Decide exact CLI/env interface for the prod opt-in.
+- [x] Decide exact CLI/env interface for the prod opt-in.
 - [ ] Implement default-dry-run in `gazette publish`.
-- [ ] Implement `GAZETTE_LIVE` (or equivalent) env guard for non-Validator
-      publishers.
+- [ ] Implement `GAZETTE_LIVE=1` env guard for non-Validator publishers.
 - [ ] Add watermark backup + audit log around `Watermark.update()`.
-- [ ] Write the operational runbook for watermark recovery and prod access.
-- [ ] Update project instructions for AI assistants.
+- [ ] Write `docs/runbooks/prod-publishing.md`.
+- [ ] Create `/work/AGENTS.md` with production publishing guardrails.
+- [ ] Update Quadlet unit to pass `--live` and set `GAZETTE_LIVE=1`.
+- [ ] Add/update tests for the new opt-in and watermark audit behaviour.
 - [ ] Promote durable output to
       `architecture/docs/gazette-prod-guardrails/`.
 
@@ -148,19 +184,20 @@ We will design and implement operational guardrails for gazette publishing that:
 Tests:
 - [ ] `gazette publish` defaults to Validator/dry-run and exits without posting
       to real targets.
-- [ ] A prod publish requires both an explicit CLI flag and an explicit env var
-      (`GAZETTE_LIVE=1`).
+- [ ] `gazette publish --live` without `GAZETTE_LIVE=1` exits with an error.
+- [ ] `GAZETTE_LIVE=1 gazette publish --live` uses real publishers as configured.
 - [ ] The opt-in is logged at INFO or higher.
-- [ ] The scheduled timer unit sets the env var intentionally, not by default.
+- [ ] The scheduled timer unit sets both the flag and the env var intentionally.
 
 ### Outcome 2: Watermark recovery is documented and safe
 
 Tests:
-- [ ] A runbook exists for advancing/resetting a prod watermark.
-- [ ] The runbook includes a pre-check (verify current placing, chart, target)
-      and post-check.
-- [ ] Manual watermark changes leave an audit trail (log entry or versioned
-      backup).
+- [ ] `docs/runbooks/prod-publishing.md` exists and covers dry-run, live access,
+      watermark advance/reset, and backup restore.
+- [ ] Every `Watermark.update()` creates `watermarks.json.bak` and appends to
+      `watermarks.log`.
+- [ ] Restoring from `watermarks.json.bak` returns the watermark file to the
+      previous state.
 
 ### Outcome 3: Multi-post / overrun cannot happen silently
 
@@ -172,6 +209,6 @@ Tests:
 ### Outcome 4: AI assistants do not iterate on prod
 
 Tests:
-- [ ] Project instructions explicitly require human confirmation before any
-      live post.
+- [ ] `/work/AGENTS.md` explicitly requires human confirmation before any live
+      post or prod watermark change.
 - [ ] Instructions require dry-run validation before any prod mutation.
