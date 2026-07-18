@@ -97,7 +97,7 @@ def test_not_ready_is_quiet_and_run_stays_clean(monkeypatch):
     good = _fake_publisher("good", ok=True)
     alerts = []
 
-    def fake_create(watermark):
+    def fake_create(watermark, live=False):
         if watermark == "notready":
             raise ReviewNotReady("not written yet")
         return {"good": good}[watermark]
@@ -124,7 +124,7 @@ def test_faults_are_loud_hold_and_do_not_abort(monkeypatch):
     good = _fake_publisher("good", ok=True)
     alerts = []
 
-    def fake_create(watermark):
+    def fake_create(watermark, live=False):
         if watermark == "corrupt":
             raise ChartCorrupt("tQ26.H is not valid JSON")
         return {"failer": failer, "good": good}[watermark]
@@ -141,3 +141,39 @@ def test_faults_are_loud_hold_and_do_not_abort(monkeypatch):
     assert failer.updated is False    # a failed send did not decrement
     assert len(alerts) == 1           # one summary alert for the whole sweep
     assert "corrupt" in alerts[0] and "failer" in alerts[0]
+
+
+def test_publish_once_passes_live_to_create_publisher(monkeypatch):
+    """publish_once(live=True) forwards live mode to create_publisher."""
+    import dynamicalsystem.gazette as gazette
+
+    calls = []
+
+    def fake_create(watermark, live=False):
+        calls.append((watermark, live))
+        raise gazette.ReviewNotReady("not written yet")
+
+    monkeypatch.setattr(gazette, "watermarks", lambda: ["target"])
+    monkeypatch.setattr(gazette, "create_publisher", fake_create)
+
+    gazette.publish_once(live=True)
+
+    assert calls == [("target", True)]
+
+
+def test_publish_once_default_is_dry_run(monkeypatch):
+    """publish_once() defaults to live=False (dry-run)."""
+    import dynamicalsystem.gazette as gazette
+
+    calls = []
+
+    def fake_create(watermark, live=False):
+        calls.append((watermark, live))
+        raise gazette.ReviewNotReady("not written yet")
+
+    monkeypatch.setattr(gazette, "watermarks", lambda: ["target"])
+    monkeypatch.setattr(gazette, "create_publisher", fake_create)
+
+    gazette.publish_once()
+
+    assert calls == [("target", False)]
