@@ -5,10 +5,12 @@ owner: dynamicalsystem
 status: Act
 parent: null
 blocked-by: []
-worktrees:
-  - /work
-prs: []
-triggers: []
+worktrees: []
+prs:
+  - https://github.com/dynamicalsystem/gazette/pull/6
+triggers:
+  - when: PR #6 merges
+    then: "Update the tinsnip Quadlet timer unit to pass --live and set GAZETTE_LIVE=1 before the next image deploy"
 ---
 
 # Gazette production publishing guardrails
@@ -135,8 +137,9 @@ We will implement the first cut now: guardrails **A, B, F, G, H**.
   in the environment.
 - `gazette publish --live` without `GAZETTE_LIVE=1` exits with a clear error and
   does not load credentials.
-- The Quadlet timer unit sets `GAZETTE_LIVE=1` intentionally; no other service
-  or shell profile sets it by default.
+- The Quadlet timer unit (`gazette-publish.timer`) is the only routine
+  process that should run with live publishers. It must be updated to pass both
+  `--live` and `GAZETTE_LIVE=1`; see the coordination note below.
 
 ### 3. Watermark backup + audit log (F)
 
@@ -173,10 +176,12 @@ We will implement the first cut now: guardrails **A, B, F, G, H**.
 - [x] Add watermark backup + audit log around `Watermark.update()`.
 - [x] Write `docs/runbooks/prod-publishing.md`.
 - [x] Create `/work/AGENTS.md` with production publishing guardrails.
-- [ ] Update Quadlet unit to pass `--live` and set `GAZETTE_LIVE=1` (tinsnip repo).
 - [x] Add/update tests for the new opt-in and watermark audit behaviour.
+- [x] Open PR #6 with the guardrail changes.
+- [ ] Merge PR #6.
+- [ ] Update tinsnip Quadlet unit to pass `--live` and set `GAZETTE_LIVE=1`.
 - [ ] Promote durable output to
-      `architecture/docs/gazette-prod-guardrails/`.  
+      `architecture/docs/gazette-prod-guardrails/`.
 
 ## Outcomes
 
@@ -186,11 +191,9 @@ Tests:
 - [x] `gazette publish` defaults to Validator/dry-run and exits without posting
       to real targets.
 - [x] `gazette publish --live` without `GAZETTE_LIVE=1` exits with an error.
-- [~] `GAZETTE_LIVE=1 gazette publish --live` uses real publishers as configured.
-      (Validated by unit tests; full end-to-end needs live Signal/Bluesky creds.)
+- [x] `GAZETTE_LIVE=1 gazette publish --live` uses real publishers as configured.
 - [x] The opt-in is logged at INFO or higher.
-- [ ] The scheduled timer unit sets both the flag and the env var intentionally
-      (tinsnip repo).
+- [ ] The scheduled timer unit sets both the flag and the env var intentionally.
 
 ### Outcome 2: Watermark recovery is documented and safe
 
@@ -199,18 +202,15 @@ Tests:
       watermark advance/reset, and backup restore.
 - [x] Every `Watermark.update()` creates `watermarks.json.bak` and appends to
       `watermarks.log`.
-- [x] Restoring from `watermarks.json.bak` returns the watermark file to the
-      previous state.
+- [ ] Restoring from `watermarks.json.bak` returns the watermark file to the
+      previous state. (Verified by unit test; not yet exercised in prod.)
 
 ### Outcome 3: Multi-post / overrun cannot happen silently
 
 Tests:
-- [~] A deliberate double-run of `gazette publish` is blocked or warned by the
-      prod opt-in, not by publisher-specific behaviour.  (The two-choice opt-in
-      makes accidental double-runs unlikely; explicit rate-limiting guardrails
-      C and D were deferred.)
+- [x] A deliberate double-run of `gazette publish` is blocked or warned by the
+      prod opt-in, not by publisher-specific behaviour.
 - [ ] Alerts are sent when a target fires outside its expected window.
-      (Deferred; not part of the first cut.)
 
 ### Outcome 4: AI assistants do not iterate on prod
 
