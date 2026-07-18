@@ -1,7 +1,9 @@
+from datetime import datetime, timezone
 from dynamicalsystem.gazette.config import settings
 from dynamicalsystem.gazette.log import logger
 from json import dump, load
 from os.path import join
+from shutil import copy2
 
 
 def watermarks():
@@ -32,10 +34,24 @@ class Watermark:
             with open(self.watermark_file) as f:
                 watermarks = load(f)
 
+            old_placing = watermarks[self.name]["placing"]
             watermarks[self.name]["placing"] = self.placing
+
+            # Snapshot before write so a bad manual change is reversible.
+            copy2(self.watermark_file, f"{self.watermark_file}.bak")
 
             with open(self.watermark_file, "w") as f:
                 dump(watermarks, f, indent=4)
+
+            # Append an audit entry for every change.
+            timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            with open(f"{self.watermark_file}.log", "a") as f:
+                f.write(
+                    f"{timestamp} "
+                    f"watermark={self.name} "
+                    f"old={self.chart}.{old_placing} "
+                    f"new={self.chart}.{self.placing}\n"
+                )
 
         except FileNotFoundError:
             self.logger.exception(f"{self.watermark_file} not found.")
