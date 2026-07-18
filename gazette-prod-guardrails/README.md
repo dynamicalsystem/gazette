@@ -2,10 +2,11 @@
 loop: gazette-prod-guardrails
 product: gazette
 owner: dynamicalsystem
-status: Decide
+status: Act
 parent: null
 blocked-by: []
-worktrees: []
+worktrees:
+  - /work
 prs: []
 triggers: []
 ---
@@ -14,7 +15,7 @@ triggers: []
 
 ## Status
 
-Decide
+Act
 
 **Owner:** dynamicalsystem
 
