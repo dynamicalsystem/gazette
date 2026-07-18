@@ -2,7 +2,7 @@
 loop: gazette-prod-guardrails
 product: gazette
 owner: dynamicalsystem
-status: Act
+status: Closed
 parent: null
 blocked-by: []
 worktrees: []
@@ -13,7 +13,7 @@ triggers:
     then: "Update the tinsnip Quadlet timer unit to pass --live and set GAZETTE_LIVE=1 before the next image deploy"
 ---
 
-# Gazette production publishing guardrails
+# [ARCHIVED] Gazette production publishing guardrails
 
 ## Status
 
