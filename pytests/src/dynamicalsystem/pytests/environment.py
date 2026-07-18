@@ -27,6 +27,9 @@ def variables(monkeypatch):
             # public content URL (not a secret; the token is). Lets the
             # content tests reach GitHub as before.
             "GITHUB_URL": "https://raw.githubusercontent.com/DynamicalSystem/content/main/",
+            # GitHub PAT for the private content repo. Forward from the outer
+            # environment so tests can access real chart data when available.
+            "GITHUB_TOKEN": environ.get("GITHUB_TOKEN", environ.get("GH_TOKEN", "")),
         }
         for k, v in envs.items():
             monkeypatch.setenv(k, v)

@@ -38,13 +38,15 @@ def test_publish_command_calls_publish_once_not_serve(monkeypatch):
     from dynamicalsystem.gazette import app as app_mod
 
     called = []
-    monkeypatch.setattr(cli_mod, "publish_once", lambda: called.append("publish") or 0)
+    monkeypatch.setattr(
+        cli_mod, "publish_once", lambda live=False: called.append(("publish", live)) or 0
+    )
     monkeypatch.setattr(app_mod, "serve", lambda: called.append("serve") or 0)
 
     rc = cli_mod.cli(["publish"])
 
     assert rc == 0
-    assert called == ["publish"]  # serve never touched
+    assert called == [("publish", False)]  # serve never touched, dry-run default
 
 
 def test_serve_command_dispatches_to_app_serve(monkeypatch):
