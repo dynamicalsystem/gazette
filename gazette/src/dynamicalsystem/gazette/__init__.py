@@ -5,9 +5,15 @@ from dynamicalsystem.gazette.content import ContentProblem, ReviewNotReady
 from dynamicalsystem.gazette.alerts import send_alert
 
 
-def publish_once() -> int:
+def publish_once(live: bool = False) -> int:
     """Run one publish sweep: for each watermark (target), publish the current
     placing and decrement it on success.
+
+    Args:
+        live: If False (default), every target is run through the Validator
+            publisher -- a dry-run that logs what would be published. If True,
+            real publishers are used, but only if `GAZETTE_LIVE=1` is also set
+            in the environment.
 
     A target with no written review yet (ReviewNotReady) is held quietly -- that
     fires every run for every unwritten placing and is not a fault. Anything else
@@ -28,7 +34,7 @@ def publish_once() -> int:
     faults = []
     for watermark in marks:
         try:
-            publisher = create_publisher(watermark=watermark)
+            publisher = create_publisher(watermark=watermark, live=live)
             if publisher.publish():
                 logger.info(
                     f"Published - {publisher.chart}.{publisher.placing} "

@@ -1,6 +1,7 @@
 import abc
 from atproto import Client, client_utils
 from grapheme import length as grapheme_length
+from os import environ
 from re import search
 from time import sleep
 from requests import get, post, RequestException
@@ -12,11 +13,30 @@ from dynamicalsystem.gazette.watermarks import Watermark
 from dynamicalsystem.gazette.content import ReviewInvalid, ReviewNotReady
 
 
-def create_publisher(watermark: str):
+class LiveModeRequired(RuntimeError):
+    """Raised when a live publisher is requested without the env guard set."""
+
+    pass
+
+
+def create_publisher(watermark: str, live: bool = False):
     w = Watermark(watermark)
     if w.placing <= 0:
         # walked off the end of the chart -- benign, hold quietly
         raise ReviewNotReady(f"Chart complete for {watermark} (placing={w.placing})")
+
+    if not live:
+        logger.info(
+            f"Dry-run - {watermark}: using Validator (configured publisher: {w.publisher})"
+        )
+        return Validator(w)
+
+    if environ.get("GAZETTE_LIVE") != "1":
+        raise LiveModeRequired(
+            f"Live publishers disabled. Set GAZETTE_LIVE=1 to publish "
+            f"{watermark} with {w.publisher}."
+        )
+
     _class = globals()[w.publisher]  # todo: this is a bit of a hack
 
     return _class(w)
