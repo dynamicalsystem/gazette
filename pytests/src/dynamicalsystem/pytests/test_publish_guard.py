@@ -129,6 +129,24 @@ def test_guard_record_prunes_expired_and_invalid_entries(tmp_path, monkeypatch):
     assert sorted(data) == ["abyss:tQ26.H.88", "calendrical_rot:tQ26.H.88"]
 
 
+def test_sweep_lock_excludes_second_holder(tmp_path, monkeypatch):
+    """A second sweep_lock on the same data folder fails fast."""
+    from pytest import raises
+
+    _clear_settings_cache()
+    monkeypatch.setenv("DATA_FOLDER", str(tmp_path))
+    from dynamicalsystem.gazette.publish_guard import SweepInProgress, sweep_lock
+
+    with sweep_lock():
+        with raises(SweepInProgress):
+            with sweep_lock():
+                pass
+
+    # Released on exit: can be taken again.
+    with sweep_lock():
+        pass
+
+
 def test_guard_save_is_atomic_and_creates_folder(tmp_path, monkeypatch):
     """Saving writes via a temp file (no .tmp left behind) and creates the
     data folder if missing."""

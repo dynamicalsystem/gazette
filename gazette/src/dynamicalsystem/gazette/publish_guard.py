@@ -1,10 +1,47 @@
+from contextlib import contextmanager
 from datetime import datetime, timezone, timedelta
+from fcntl import LOCK_EX, LOCK_NB, flock
 from json import JSONDecodeError, dump, load
 from os import makedirs, replace
 from os.path import dirname, join
 
 from dynamicalsystem.gazette.config import settings
 from dynamicalsystem.gazette.log import logger
+
+
+class SweepInProgress(RuntimeError):
+    """Another live publish sweep already holds the sweep lock."""
+
+    pass
+
+
+@contextmanager
+def sweep_lock():
+    """Serialize live publish sweeps across processes.
+
+    The publish-once guard is check-then-act: two concurrent sweeps could both
+    pass ``is_published()`` before either records, and double-post. systemd
+    already refuses to start the timer unit twice; this flock extends the same
+    guarantee to manual runs alongside the timer. Non-blocking: a second sweep
+    raises SweepInProgress and fails fast rather than queueing a stale sweep
+    behind the running one.
+    """
+    config = settings()
+    makedirs(config.data_folder, exist_ok=True)
+    lock_path = join(config.data_folder, "publish.lock")
+    lock_file = open(lock_path, "w")
+    try:
+        try:
+            flock(lock_file, LOCK_EX | LOCK_NB)
+        except OSError as e:
+            raise SweepInProgress(
+                f"Another publish sweep holds {lock_path}; "
+                f"refusing to run concurrently."
+            ) from e
+        yield
+    finally:
+        # Closing the descriptor releases the flock.
+        lock_file.close()
 
 
 class PublishGuard:

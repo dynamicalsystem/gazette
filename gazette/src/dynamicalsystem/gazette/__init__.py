@@ -1,6 +1,10 @@
 from dynamicalsystem.gazette.log import logger
 from dynamicalsystem.gazette.publishers import create_publisher
-from dynamicalsystem.gazette.publish_guard import PublishGuard
+from dynamicalsystem.gazette.publish_guard import (
+    PublishGuard,
+    SweepInProgress,
+    sweep_lock,
+)
 from dynamicalsystem.gazette.watermarks import Watermark, watermarks
 from dynamicalsystem.gazette.content import ContentProblem, ReviewNotReady
 from dynamicalsystem.gazette.alerts import send_alert
@@ -24,9 +28,30 @@ def publish_once(live: bool = False) -> int:
     and the function returns non-zero after alerting the operator. This is what
     stops a silent, all-target outage from ever looking like a clean run again.
 
+    Live sweeps hold an exclusive lock (`publish.lock` in the data folder) so
+    two sweeps can never interleave -- the publish-once guard is check-then-act
+    and cannot protect against a concurrent sweep on its own. A second live
+    sweep (e.g. a manual run alongside the timer) fails fast with a non-zero
+    return instead of double-posting. Dry-runs neither take nor respect the
+    lock.
+
     Library entry point -- called by the `publish` CLI and the systemd timer.
     Does not touch the web stack.
     """
+    if not live:
+        return _sweep(live=False)
+
+    try:
+        with sweep_lock():
+            return _sweep(live=True)
+    except SweepInProgress as e:
+        summary = f"gazette publish: {e}"
+        logger.error(summary)
+        send_alert(summary)
+        return 1
+
+
+def _sweep(live: bool) -> int:
     marks = watermarks()
     if not marks:
         logger.warning("No watermarks to publish (missing or empty watermark file).")

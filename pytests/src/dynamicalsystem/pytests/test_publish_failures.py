@@ -263,3 +263,33 @@ def test_publish_once_does_not_record_dry_run(tmp_path, monkeypatch):
     gazette.publish_once(live=True)
 
     assert calls == [True]
+
+
+def test_publish_once_live_bails_when_sweep_lock_held(tmp_path, monkeypatch):
+    """A live sweep fails fast (non-zero, no publish) if another sweep holds
+    the lock; a dry-run proceeds regardless."""
+    import dynamicalsystem.gazette as gazette
+    from dynamicalsystem.gazette.publish_guard import sweep_lock
+
+    monkeypatch.setenv("DATA_FOLDER", str(tmp_path))
+    from dynamicalsystem.gazette.config import settings
+
+    settings.cache_clear()
+    _write_watermarks(tmp_path)
+
+    pub = _fake_publisher("target", ok=True)
+    calls = []
+
+    def fake_create(watermark, live=False):
+        calls.append(live)
+        return pub
+
+    monkeypatch.setattr(gazette, "watermarks", lambda: ["target"])
+    monkeypatch.setattr(gazette, "create_publisher", fake_create)
+
+    with sweep_lock():
+        assert gazette.publish_once(live=True) == 1
+        assert calls == []  # never reached a publisher
+
+        gazette.publish_once(live=False)
+        assert calls == [False]  # dry-run ignores the lock
