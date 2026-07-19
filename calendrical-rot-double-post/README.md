@@ -112,6 +112,11 @@ watermarks. Abyss posts are reported fine.
       `~/.local/share`) so dev state never lands in the repo cwd. Prod sets
       `DATA_FOLDER` explicitly and is unchanged.
 - [x] Commit/push code changes to `main` (8e4ba2b).
+- [x] Serialize live sweeps with a non-blocking flock on `publish.lock`
+      (f80f5d0): closes the check-then-act race between concurrent sweeps
+      (e.g. a manual run alongside the timer) and the read-modify-write race
+      in `PublishGuard.record()`. A second live sweep fails fast with a
+      non-zero return; dry-runs are unaffected.
 - [ ] Deploy a new image.
 - [ ] Verify the next scheduled run does not double-post `calendrical_rot`.
 
