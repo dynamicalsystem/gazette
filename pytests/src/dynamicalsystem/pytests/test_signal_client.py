@@ -129,6 +129,30 @@ def test_signal_publish_gives_up_after_all_attempts(monkeypatch):
     assert len(posts) == s._RETRY_ATTEMPTS  # tried the full budget
 
 
+def test_signal_publish_holds_on_unregistered_user(monkeypatch):
+    """An unregistered recipient is a permanently broken route: no retry, and
+    publish() returns False so the sweep holds the watermark and alerts,
+    rather than advancing past undelivered content."""
+    from dynamicalsystem.gazette import publishers
+
+    monkeypatch.setattr(publishers, "sleep", lambda *_: None)
+    posts = []
+
+    def fake_post(url, json, headers, **kwargs):
+        posts.append(url)
+        return _response(
+            ok=False,
+            status=400,
+            error="Failed to send message: Unregistered user +4477000000",
+        )
+
+    monkeypatch.setattr(publishers, "post", fake_post)
+
+    s = _make_signal()
+    assert s.publish() is False
+    assert len(posts) == 1  # no retry
+
+
 def test_signal_publish_does_not_retry_unrecognized_errors(monkeypatch):
     """Retry is an allowlist: any error we cannot positively identify as
     transient is non-retriable, because the send may have partially

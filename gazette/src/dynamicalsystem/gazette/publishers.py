@@ -177,9 +177,16 @@ class Signal(Publisher):
             error = response.json().get("error") or ""
             first_line = error.splitlines()[0] if error else str(response.status_code)
 
-            # permanent for this recipient -- do not retry
+            # permanent for this recipient -- the route config is rotten
+            # (wrong number, or the identity got unregistered). Do not retry,
+            # and do not advance past undelivered content: hold the watermark
+            # and alert until the route is fixed or removed.
             if response.status_code == 400 and search("Unregistered user", error):
-                return True  # todo: confirm the message actually got sent
+                self.logger.error(
+                    f"Signal send failed: unregistered user for "
+                    f"{self.watermark.target} -- fix or remove this route"
+                )
+                return False
 
             # signal-cli wants its inbox drained before it will send -- drain, retry now
             if response.status_code == 400 and search(
