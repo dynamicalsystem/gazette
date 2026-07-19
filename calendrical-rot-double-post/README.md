@@ -122,7 +122,12 @@ watermarks. Abyss posts are reported fine.
       SocketException 400, drain-inbox). Unrecognized errors fail safe --
       return False, hold the watermark, alert -- so a renamed or re-wrapped
       exception can never default back into a duplicate-posting retry.
-- [ ] Deploy a new image.
+- [x] Treat Signal "Unregistered user" as a fault (8689632): return False,
+      hold the watermark, and alert instead of silently advancing past
+      undelivered content.
+- [x] Deploy a new image: CI release runs built and pushed every main
+      commit; latest image (2026-07-19 22:14 UTC) is from 8689632 and
+      carries all fixes.
 - [ ] Verify the next scheduled run does not double-post `calendrical_rot`.
 
 ## Outcomes
