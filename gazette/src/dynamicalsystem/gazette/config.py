@@ -1,5 +1,15 @@
 from functools import lru_cache
+from os import environ
+from os.path import expanduser, join
+
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _default_data_folder() -> str:
+    """XDG data home for dev; prod always sets DATA_FOLDER explicitly."""
+    base = environ.get("XDG_DATA_HOME") or expanduser("~/.local/share")
+    return join(base, "dynamicalsystem", "data")
 
 
 class Settings(BaseSettings):
@@ -40,7 +50,7 @@ class Settings(BaseSettings):
     signal_ops_target: str = ""
 
     # state
-    data_folder: str = ""
+    data_folder: str = Field(default_factory=_default_data_folder)
     watermark_file: str = "watermarks.json"
 
     # web service (gazette serve)

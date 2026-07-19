@@ -46,6 +46,29 @@ def test_settings_defaults():
     assert s.watermark_file == "watermarks.json"
 
 
+def test_data_folder_defaults_to_xdg_data_home():
+    """Without DATA_FOLDER, state lives under XDG data home, never the cwd."""
+    from os.path import join
+
+    from dynamicalsystem.gazette.config import Settings
+
+    with mock.patch.dict(
+        environ, {"XDG_DATA_HOME": "/xdg/data"}, clear=True
+    ):
+        s = Settings(_env_file=None)
+    assert s.data_folder == join("/xdg/data", "dynamicalsystem", "data")
+
+    with mock.patch.dict(environ, {"HOME": "/home/pytest"}, clear=True):
+        s = Settings(_env_file=None)
+    assert s.data_folder == join(
+        "/home/pytest", ".local", "share", "dynamicalsystem", "data"
+    )
+
+    with mock.patch.dict(environ, {"DATA_FOLDER": "/data"}, clear=True):
+        s = Settings(_env_file=None)
+    assert s.data_folder == "/data"
+
+
 def test_gazette_imports_without_halogen():
     """gazette must not depend on dynamicalsystem.halogen at import time."""
     for name in [m for m in sys.modules if m.startswith("dynamicalsystem.gazette")]:

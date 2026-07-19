@@ -19,22 +19,22 @@ class LiveModeRequired(RuntimeError):
     pass
 
 
-def create_publisher(watermark: str, live: bool = False):
-    w = Watermark(watermark)
+def create_publisher(watermark: str | Watermark, live: bool = False):
+    w = watermark if isinstance(watermark, Watermark) else Watermark(watermark)
     if w.placing <= 0:
         # walked off the end of the chart -- benign, hold quietly
-        raise ReviewNotReady(f"Chart complete for {watermark} (placing={w.placing})")
+        raise ReviewNotReady(f"Chart complete for {w.name} (placing={w.placing})")
 
     if not live:
         logger.info(
-            f"Dry-run - {watermark}: using Validator (configured publisher: {w.publisher})"
+            f"Dry-run - {w.name}: using Validator (configured publisher: {w.publisher})"
         )
         return Validator(w)
 
     if environ.get("GAZETTE_LIVE") != "1":
         raise LiveModeRequired(
             f"Live publishers disabled. Set GAZETTE_LIVE=1 to publish "
-            f"{watermark} with {w.publisher}."
+            f"{w.name} with {w.publisher}."
         )
 
     _class = globals()[w.publisher]  # todo: this is a bit of a hack
@@ -188,6 +188,19 @@ class Signal(Publisher):
                 count = self._drain_inbox()
                 self.logger.warning(f"Drained {count} Signal messages; retrying send")
                 continue
+
+            # MismatchedDevicesException: the Signal server may already have
+            # delivered the message to some devices before rejecting the stale
+            # device list. Retrying here duplicates posts. Treat as a fault and
+            # let the operator refresh the group/device state.
+            if response.status_code == 400 and search(
+                "MismatchedDevicesException", error
+            ):
+                self.logger.error(
+                    f"Signal send {attempt}/{self._RETRY_ATTEMPTS} failed: "
+                    f"MismatchedDevicesException -- not retrying to avoid duplicate posts"
+                )
+                return False
 
             # anything else (incl. the transient SocketException 400) -- back off + retry
             self.logger.error(

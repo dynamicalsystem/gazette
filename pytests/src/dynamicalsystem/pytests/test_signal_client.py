@@ -127,3 +127,29 @@ def test_signal_publish_gives_up_after_all_attempts(monkeypatch):
 
     assert result is False
     assert len(posts) == s._RETRY_ATTEMPTS  # tried the full budget
+
+
+def test_signal_publish_does_not_retry_mismatched_devices(monkeypatch):
+    """MismatchedDevicesException (409) is non-retriable to avoid duplicate posts."""
+    from dynamicalsystem.gazette import publishers
+
+    monkeypatch.setattr(publishers, "sleep", lambda *_: None)
+    error = (
+        "Failed to send message: java.io.IOException: "
+        "org.whispersystems.signalservice.internal.push.exceptions."
+        "MismatchedDevicesException: StatusCode: 409 (IOException) "
+        "(UnexpectedErrorException)"
+    )
+    posts = []
+
+    def fake_post(url, json, headers, **kwargs):
+        posts.append(url)
+        return _response(ok=False, status=400, error=error)
+
+    monkeypatch.setattr(publishers, "post", fake_post)
+
+    s = _make_signal()
+    result = s.publish()
+
+    assert result is False
+    assert len(posts) == 1  # no retry

@@ -177,3 +177,89 @@ def test_publish_once_default_is_dry_run(monkeypatch):
     gazette.publish_once()
 
     assert calls == [("target", False)]
+
+
+def _write_watermarks(data_folder, chart="tQ26.H", placing=100):
+    from json import dump
+    from os.path import join
+
+    with open(join(data_folder, "watermarks.json"), "w") as f:
+        dump(
+            {
+                "target": {
+                    "publisher": "Validator",
+                    "chart": chart,
+                    "placing": placing,
+                    "target": "dev",
+                }
+            },
+            f,
+        )
+
+
+def test_publish_once_records_live_publish_and_skips_duplicates(tmp_path, monkeypatch):
+    """A successful live publish is recorded; a repeat within the guard window is
+    skipped without calling the publisher again."""
+    import dynamicalsystem.gazette as gazette
+
+    monkeypatch.setenv("DATA_FOLDER", str(tmp_path))
+    from dynamicalsystem.gazette.config import settings
+
+    settings.cache_clear()
+    _write_watermarks(tmp_path)
+
+    pub = _fake_publisher("target", ok=True)
+    calls = []
+
+    def fake_create(watermark, live=False):
+        calls.append((watermark, live))
+        return pub
+
+    monkeypatch.setattr(gazette, "watermarks", lambda: ["target"])
+    monkeypatch.setattr(gazette, "create_publisher", fake_create)
+
+    # First live run: publish and record.
+    rc = gazette.publish_once(live=True)
+    assert rc == 0
+    assert pub.updated is True
+    assert len(calls) == 1
+
+    # Second live run: same watermark/placing, should be skipped.
+    pub.updated = False
+    rc = gazette.publish_once(live=True)
+    assert rc == 0
+    assert pub.updated is False  # not published again
+    assert len(calls) == 1       # create_publisher not called again
+
+
+def test_publish_once_does_not_record_dry_run(tmp_path, monkeypatch):
+    """Dry-runs are not recorded in the publish guard."""
+    import dynamicalsystem.gazette as gazette
+
+    monkeypatch.setenv("DATA_FOLDER", str(tmp_path))
+    from dynamicalsystem.gazette.config import settings
+
+    settings.cache_clear()
+    _write_watermarks(tmp_path)
+
+    pub = _fake_publisher("target", ok=True)
+
+    def fake_create(watermark, live=False):
+        return pub
+
+    monkeypatch.setattr(gazette, "watermarks", lambda: ["target"])
+    monkeypatch.setattr(gazette, "create_publisher", fake_create)
+
+    gazette.publish_once(live=False)
+
+    # A subsequent live run should NOT be skipped, because the dry-run was not recorded.
+    calls = []
+
+    def live_create(watermark, live=False):
+        calls.append(live)
+        return pub
+
+    monkeypatch.setattr(gazette, "create_publisher", live_create)
+    gazette.publish_once(live=True)
+
+    assert calls == [True]

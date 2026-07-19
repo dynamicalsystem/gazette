@@ -1,6 +1,7 @@
 from dynamicalsystem.gazette.log import logger
 from dynamicalsystem.gazette.publishers import create_publisher
-from dynamicalsystem.gazette.watermarks import watermarks
+from dynamicalsystem.gazette.publish_guard import PublishGuard
+from dynamicalsystem.gazette.watermarks import Watermark, watermarks
 from dynamicalsystem.gazette.content import ContentProblem, ReviewNotReady
 from dynamicalsystem.gazette.alerts import send_alert
 
@@ -31,9 +32,25 @@ def publish_once(live: bool = False) -> int:
         logger.warning("No watermarks to publish (missing or empty watermark file).")
         return 0
 
+    guard = PublishGuard()
     faults = []
     for watermark in marks:
         try:
+            # Check the publish-once guard before doing anything expensive
+            # (e.g., logging into Bluesky). This prevents double posts from
+            # retries, timer misfires, or manual re-runs.
+            preview = Watermark(watermark)
+            preview_chart = getattr(preview, "chart", None) or ""
+            preview_placing = getattr(preview, "placing", None) or 0
+            if preview_chart and guard.is_published(
+                watermark, preview_chart, preview_placing
+            ):
+                logger.warning(
+                    f"Skipping {watermark}: {preview_chart}.{preview_placing} "
+                    f"was already published within the guard window."
+                )
+                continue
+
             publisher = create_publisher(watermark=watermark, live=live)
             if publisher.publish():
                 logger.info(
@@ -41,6 +58,8 @@ def publish_once(live: bool = False) -> int:
                     f"on {publisher.__class__.__name__} "
                     f"with {publisher.watermark.name}."
                 )
+                if live:
+                    guard.record(watermark, publisher.chart, publisher.placing)
                 publisher.watermark.update()
             else:
                 logger.error(
