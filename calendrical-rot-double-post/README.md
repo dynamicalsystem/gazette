@@ -117,6 +117,11 @@ watermarks. Abyss posts are reported fine.
       (e.g. a manual run alongside the timer) and the read-modify-write race
       in `PublishGuard.record()`. A second live sweep fails fast with a
       non-zero return; dry-runs are unaffected.
+- [x] Flip the Signal retry policy to an allowlist (394b5fd): only
+      positively identified transient errors retry (RequestException,
+      SocketException 400, drain-inbox). Unrecognized errors fail safe --
+      return False, hold the watermark, alert -- so a renamed or re-wrapped
+      exception can never default back into a duplicate-posting retry.
 - [ ] Deploy a new image.
 - [ ] Verify the next scheduled run does not double-post `calendrical_rot`.
 
