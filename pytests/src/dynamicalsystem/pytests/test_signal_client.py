@@ -129,6 +129,41 @@ def test_signal_publish_gives_up_after_all_attempts(monkeypatch):
     assert len(posts) == s._RETRY_ATTEMPTS  # tried the full budget
 
 
+def test_signal_publish_does_not_retry_unrecognized_errors(monkeypatch):
+    """Retry is an allowlist: any error we cannot positively identify as
+    transient is non-retriable, because the send may have partially
+    delivered and a retry would duplicate the post."""
+    from dynamicalsystem.gazette import publishers
+
+    monkeypatch.setattr(publishers, "sleep", lambda *_: None)
+    posts = []
+
+    def fake_post(url, json, headers, **kwargs):
+        posts.append(url)
+        return _response(
+            ok=False, status=400, error="Failed to send message: NovelException"
+        )
+
+    monkeypatch.setattr(publishers, "post", fake_post)
+
+    s = _make_signal()
+    assert s.publish() is False
+    assert len(posts) == 1  # no retry
+
+    # A non-400 status is equally unrecognized and equally non-retriable.
+    posts.clear()
+    monkeypatch.setattr(
+        publishers,
+        "post",
+        lambda url, json, headers, **kwargs: (
+            posts.append(url),
+            _response(ok=False, status=500, error="Internal error"),
+        )[1],
+    )
+    assert s.publish() is False
+    assert len(posts) == 1
+
+
 def test_signal_publish_does_not_retry_mismatched_devices(monkeypatch):
     """MismatchedDevicesException (409) is non-retriable to avoid duplicate posts."""
     from dynamicalsystem.gazette import publishers

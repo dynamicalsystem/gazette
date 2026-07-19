@@ -189,26 +189,32 @@ class Signal(Publisher):
                 self.logger.warning(f"Drained {count} Signal messages; retrying send")
                 continue
 
-            # MismatchedDevicesException: the Signal server may already have
-            # delivered the message to some devices before rejecting the stale
-            # device list. Retrying here duplicates posts. Treat as a fault and
-            # let the operator refresh the group/device state.
-            if response.status_code == 400 and search(
-                "MismatchedDevicesException", error
-            ):
+            # transient signal-cli connection hiccup -- back off and retry.
+            # This is the only server-reported error we retry: retrying is an
+            # allowlist, because a rejected send may still have partially
+            # delivered (MismatchedDevicesException 409 taught us this) and a
+            # retry then duplicates the post.
+            if response.status_code == 400 and search("SocketException", error):
                 self.logger.error(
-                    f"Signal send {attempt}/{self._RETRY_ATTEMPTS} failed: "
-                    f"MismatchedDevicesException -- not retrying to avoid duplicate posts"
+                    f"Signal send {attempt}/{self._RETRY_ATTEMPTS} failed: {first_line}"
+                )
+                if attempt < self._RETRY_ATTEMPTS:
+                    sleep(self._RETRY_BACKOFF)
+                    continue
+                return False
+
+            # stale group/device state; the send may be partially delivered
+            if search("MismatchedDevicesException", error):
+                self.logger.error(
+                    f"Signal send failed: MismatchedDevicesException -- refresh "
+                    f"the group/device state with signal-cli before the next run"
                 )
                 return False
 
-            # anything else (incl. the transient SocketException 400) -- back off + retry
+            # anything unrecognized fails safe: hold the watermark and alert
             self.logger.error(
-                f"Signal send {attempt}/{self._RETRY_ATTEMPTS} failed: {first_line}"
+                f"Signal send failed, not retrying unrecognized error: {first_line}"
             )
-            if attempt < self._RETRY_ATTEMPTS:
-                sleep(self._RETRY_BACKOFF)
-                continue
             return False
 
         return False
