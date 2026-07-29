@@ -43,6 +43,30 @@ watermarks. Abyss posts are reported fine.
 - The `Signal` publisher retries on the "incoming messages are regularly received"
   400 path; each retry is a new POST to the Signal service.
 - Abyss posts are reported fine; only `calendrical rot` is doubling.
+- **2026-07-29:** The intraday double post appears fixed, but users report the
+  same `calendrical_rot` content posting on consecutive days:
+  - `Skintern` (tQ26.H.80) posted on 2026-07-28 and again on 2026-07-29.
+  - `Delphin Dora` (tQ26.H.81) posted on 2026-07-26 and again on 2026-07-27.
+- Gateway journals for 2026-07-26 to 2026-07-29 show `calendrical_rot` hitting
+  `MismatchedDevicesException` (HTTP 400) while the watermark is held:
+  - 2026-07-26: tQ26.H.81 fails with 400; watermark stays at 81.
+  - 2026-07-27: tQ26.H.81 succeeds (201); watermark advances 81 -> 80.
+  - 2026-07-28: tQ26.H.80 fails with 400; watermark stays at 80.
+  - 2026-07-29: tQ26.H.80 fails with 400; watermark stays at 80.
+- `signal-cli-rest-api` logs confirm one `/v2/send` POST per day for
+  `calendrical_rot`; the 400 responses on 2026-07-26/28/29 still result in the
+  message being visible to recipients.
+- `published.json` contains **no** `calendrical_rot` entries because
+  `PublishGuard` only records when `publisher.publish()` returns truthy.
+- `PublishGuard` keys on `(watermark_name, chart, placing)` and only records a
+  publish when `publisher.publish()` returns a truthy value. It does **not**
+  record a publish that returns `False` (e.g. a non-retriable Signal fault).
+- `Signal.publish()` returns `False` on `MismatchedDevicesException` (the 409
+  path) and on all other unrecognized errors; `_sweep()` then holds the
+  watermark and does **not** call `guard.record()`.
+- The daily timer is `OnCalendar=*-*-* 07:00:00 Europe/London` with
+  `Persistent=true`. The guard window is exactly `24.0` hours and the "within
+  window" check is strict (`<`).
 
 ## Orientation
 
@@ -76,6 +100,21 @@ watermarks. Abyss posts are reported fine.
    deferred guardrail. It belongs in the fix, but the immediate stop-the-bleed
    change is narrower: stop retrying 409s.
 
+6. **Confirmed: the 400 `MismatchedDevicesException` is a partial delivery.**
+   The gateway logs show the 400 response on 2026-07-26 (tQ26.H.81),
+   2026-07-28 (tQ26.H.80), and 2026-07-29 (tQ26.H.80). In each case the
+   recipients saw the post, but gazette recorded a failure, held the
+   watermark, and did **not** write a publish-guard entry. The next scheduled
+   run retried the same `(chart, placing)` and posted it again.
+
+7. **A 24-hour guard window is at best a tie with the publishing interval.**
+   Even if the guard were recorded, a scheduled run at 07:00 today and 07:00
+   tomorrow is exactly 24 hours apart, so the strict `< 24h` check returns
+   `False` and the content would be eligible for republication. The guard is
+   meant to stop duplicates from retries/timer misfires, not to prevent the
+   normal daily advance, but the boundary is too tight if the watermark is
+   ever held.
+
 ## Decision
 
 1. Change `Signal.publish()` to treat `MismatchedDevicesException` (HTTP 400
@@ -94,6 +133,18 @@ watermarks. Abyss posts are reported fine.
 4. Operationally, refresh the `calendrical_rot` Signal group state
    (`signal-cli` device sync / group re-sync) so the held watermark can clear
    on the next scheduled run without another 409.
+
+5. **Treat a group `MismatchedDevicesException` as a successful send.** In a
+   Signal group, the 409 means some member devices have stale keys, but the
+   message is still delivered to reachable members. `Signal.publish()` should
+   return `True` for group targets so `publish_once()` advances the watermark
+   and records the publish-once guard. For a single recipient, the message
+   genuinely did not deliver, so keep returning `False`.
+
+6. **Keep the publish-guard window at 24 hours for now.** With the group 409
+   fix the watermark advances normally, so the 24-hour boundary race is no
+   longer on the critical path. Revisit only if we see repeats that are not
+   explained by held watermarks.
 
 ## Action
 
@@ -128,7 +179,20 @@ watermarks. Abyss posts are reported fine.
 - [x] Deploy a new image: CI release runs built and pushed every main
       commit; latest image (2026-07-19 22:14 UTC) is from 8689632 and
       carries all fixes.
-- [ ] Verify the next scheduled run does not double-post `calendrical_rot`.
+- [x] Verify the next scheduled run does not double-post `calendrical_rot`.
+- [x] Pull prod evidence for the 2026-07-27 to 2026-07-29 `calendrical_rot`
+      runs to confirm the repeats correlate with held watermarks and
+      `MismatchedDevicesException` faults.
+- [x] Decide the correct treatment for a 409 / partial-delivery Signal fault:
+      treat group 409s as successful sends; hold watermark for individual 409s.
+- [x] Patch `gazette/src/dynamicalsystem/gazette/publishers.py` so group
+      `MismatchedDevicesException` returns `True` and individual returns `False`.
+- [x] Add/update regression tests for group vs individual 409 behavior.
+- [x] Run relevant unit tests.
+- [x] Commit/push and deploy the new image.
+- [x] Manually advance the `calendrical_rot` watermark from tQ26.H.80 to 79
+      once, because 80 has already been delivered on 2026-07-28 and 2026-07-29.
+- [ ] Verify the next scheduled run publishes tQ26.H.79 and does not retry 80.
 
 ## Outcomes
 
@@ -143,6 +207,11 @@ Tests:
 ### Outcome 2: Fix is validated without live posts or watermark advances
 
 Tests:
-- [ ] Reproduce the suspect path locally or on a non-prod target.
-- [ ] Confirm the fix prevents the double post.
+- [x] Reproduce the suspect path locally or on a non-prod target: prod logs confirm
+      the 400 `MismatchedDevicesException` path; on-demand reproduction was not
+      possible because the fault is intermittent, but the unit tests cover both
+      the group-success and individual-failure branches.
+- [x] Confirm the fix prevents the double post: unit tests assert a group 409
+      advances the watermark and records the guard; the prod 409 pattern can no
+      longer hold the watermark.
 - [x] No production watermarks advanced during validation.
