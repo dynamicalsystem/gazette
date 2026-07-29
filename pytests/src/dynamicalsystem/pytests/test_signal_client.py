@@ -188,8 +188,10 @@ def test_signal_publish_does_not_retry_unrecognized_errors(monkeypatch):
     assert len(posts) == 1
 
 
-def test_signal_publish_does_not_retry_mismatched_devices(monkeypatch):
-    """MismatchedDevicesException (409) is non-retriable to avoid duplicate posts."""
+def test_signal_publish_group_mismatched_devices_is_success(monkeypatch):
+    """MismatchedDevicesException (409) on a group send means the message was
+    delivered to reachable members, so treat it as success and advance the
+    watermark to avoid reposting the same content daily."""
     from dynamicalsystem.gazette import publishers
 
     monkeypatch.setattr(publishers, "sleep", lambda *_: None)
@@ -208,6 +210,35 @@ def test_signal_publish_does_not_retry_mismatched_devices(monkeypatch):
     monkeypatch.setattr(publishers, "post", fake_post)
 
     s = _make_signal()
+    assert str(s.watermark.target).startswith("group.")
+    result = s.publish()
+
+    assert result is True
+    assert len(posts) == 1  # no retry
+
+
+def test_signal_publish_individual_mismatched_devices_holds_watermark(monkeypatch):
+    """MismatchedDevicesException (409) on a single recipient means the message
+    really did not deliver; hold the watermark and alert."""
+    from dynamicalsystem.gazette import publishers
+
+    monkeypatch.setattr(publishers, "sleep", lambda *_: None)
+    error = (
+        "Failed to send message: java.io.IOException: "
+        "org.whispersystems.signalservice.internal.push.exceptions."
+        "MismatchedDevicesException: StatusCode: 409 (IOException) "
+        "(UnexpectedErrorException)"
+    )
+    posts = []
+
+    def fake_post(url, json, headers, **kwargs):
+        posts.append(url)
+        return _response(ok=False, status=400, error=error)
+
+    monkeypatch.setattr(publishers, "post", fake_post)
+
+    s = _make_signal()
+    s.watermark.target = "+447700000000"  # individual, not a group
     result = s.publish()
 
     assert result is False

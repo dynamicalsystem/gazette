@@ -210,11 +210,22 @@ class Signal(Publisher):
                     continue
                 return False
 
-            # stale group/device state; the send may be partially delivered
+            # stale group/device state. In a group this means some member
+            # devices have stale keys, but the message was still delivered to
+            # reachable members. Treat group 409s as success so the watermark
+            # advances and we do not repost the same content the next day.
+            # For a single recipient, the message really did not deliver.
             if search("MismatchedDevicesException", error):
+                if str(self.watermark.target).startswith("group."):
+                    self.logger.warning(
+                        f"Signal group send returned MismatchedDevicesException; "
+                        f"treating as delivered to {self.watermark.target}"
+                    )
+                    return True
                 self.logger.error(
-                    f"Signal send failed: MismatchedDevicesException -- refresh "
-                    f"the group/device state with signal-cli before the next run"
+                    f"Signal send failed: MismatchedDevicesException for "
+                    f"{self.watermark.target} -- refresh the device state "
+                    f"before the next run"
                 )
                 return False
 
