@@ -45,6 +45,12 @@ jobs:
         # container driver: required for the gha build cache export below
         uses: docker/setup-buildx-action@v3
 
+      - name: Commit subject
+        # Carried as an image label so the gateway's auto-update notifier can
+        # say WHAT a deploy shipped without any network call from the box.
+        id: subject
+        run: echo "subject=$(git log -1 --pretty=%s)" >> "$GITHUB_OUTPUT"
+
       - name: Image metadata (tags + labels)
         id: meta
         uses: docker/metadata-action@v5
@@ -54,6 +60,8 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,format=long
             type=semver,pattern={{version}}
+          labels: |
+            com.dynamicalsystem.commit-subject=${{ steps.subject.outputs.subject }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
