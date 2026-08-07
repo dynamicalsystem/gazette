@@ -10,7 +10,7 @@ prs: []
 triggers: []
 ---
 
-# Calendrical rot double-post regression
+# [ARCHIVED] Calendrical rot double-post regression
 
 ## Status
 
@@ -192,7 +192,7 @@ watermarks. Abyss posts are reported fine.
 - [x] Commit/push and deploy the new image.
 - [x] Manually advance the `calendrical_rot` watermark from tQ26.H.80 to 79
       once, because 80 has already been delivered on 2026-07-28 and 2026-07-29.
-- [ ] Verify the next scheduled run publishes tQ26.H.79 and does not retry 80.
+- [x] Verify the next scheduled run publishes tQ26.H.79 and does not retry 80.
 
 ## Outcomes
 
