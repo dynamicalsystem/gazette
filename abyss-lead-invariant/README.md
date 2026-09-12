@@ -234,16 +234,24 @@ Agreed with Simon 2026-09-12:
 - [x] PR #7 opened, offline-tests green, merged to main as 78777bd
       2026-09-12 15:24 UTC; branch deleted.
 - [x] Release workflow run 34702130193 built the image from 78777bd.
-- [ ] Add `"follows": "abyss"` to josh, calendrical_rot and bluesky in the
-      gateway `watermarks.json` (SSH write blocked for Claude by the auto-mode
-      classifier; Simon to run with a backup copy first).
-- [x] Gateway auto-update pulled the new image 2026-09-12 15:28 UTC (id 887b9c196780, digest 2399fe865909).
-- [ ] Dry-run `gazette publish` on the gateway: abyss would post 33, josh
-      logs `waiting for the lead, held`, calendrical_rot 34, bluesky 36.
+- [x] `"follows": "abyss"` added to josh, calendrical_rot and bluesky on the
+      gateway 2026-09-12 15:38 UTC; prior file kept as
+      `watermarks.json.pre-follows`. Done after switching Claude off auto mode.
+- [x] Dry-run of the new image on the gateway against a temporary COPY of the
+      data folder (15:42 UTC): abyss would post 33, bluesky 36, calendrical_rot
+      34, and josh logged `Leader abyss is at tQ26.H.33 and has not published
+      33 yet ... waiting for the lead, held`. Live placings unchanged
+      (33/36/34/33).
 - [ ] Verify the 2026-09-13 06:00 UTC sweep in `watermarks.json.log`.
 
 Pre-existing: ten tests in test_content and test_publishers need network
 access and fail identically on main. CI runs the offline set only.
+
+Found on the way: a dry-run ADVANCES watermarks. `Validator.publish` returns
+True and `_sweep` calls `watermark.update()` regardless of mode. The runbook
+tells operators to dry-run on the gateway before a live run, which would
+decrement every prod watermark. The verification above used a copy of the
+data folder for that reason. Recorded in the backlog; not fixed in this loop.
 
 ## Outcomes
 
@@ -253,26 +261,27 @@ Tests:
 - [ ] Prod `watermarks.json` shows abyss placing strictly less than every
       other route on tQ26.H.
 - [ ] `watermarks.json.log` records the manual change with a timestamp.
-- [ ] A dry-run `gazette publish` on the gateway shows Abyss and prod would
-      each publish a different placing on the next sweep.
+- [x] A dry-run `gazette publish` on the gateway (against a copy of the data
+      folder) shows Abyss and prod would each publish a different placing on
+      the next sweep, and josh holds.
 - [ ] No prod target posted an unreviewed or unpreviewed placing as a result
       of the bump (Signal group history checked).
 
 ### Outcome 2: The sweep guarantees Abyss publishes a placing before any prod target does
 
 Tests:
-- [ ] Unit test: leader and follower level, review written: leader publishes,
+- [x] Unit test: leader and follower level, review written: leader publishes,
       follower holds.
-- [ ] Unit test: follower one behind leader, both reviews written: both
+- [x] Unit test: follower one behind leader, both reviews written: both
       publish.
-- [ ] Unit test: leader held on `ReviewNotReady`, follower one behind: follower
+- [x] Unit test: leader held on `ReviewNotReady`, follower one behind: follower
       publishes today and draws level; when the review lands, the leader
       publishes and the follower holds that sweep, then publishes the next.
-- [ ] Unit test: `follows` naming a missing route, a route on another chart,
+- [x] Unit test: `follows` naming a missing route, a route on another chart,
       or forming a cycle is held as a fault and alerted, and other routes still
       sweep.
-- [ ] Unit test: routes without `follows` behave exactly as before.
-- [ ] Runbook updated: the lead is enforced, the manual procedure is for
+- [x] Unit test: routes without `follows` behave exactly as before.
+- [x] Runbook updated: the lead is enforced, the manual procedure is for
       recovery only.
 - [ ] Deployed to the gateway with `follows` set on every prod route, and
       `watermarks.json.log` over the following week never shows a follower
