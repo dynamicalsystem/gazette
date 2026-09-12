@@ -20,6 +20,35 @@ def watermarks():
     return watermarks.keys()
 
 
+class RouteInvalid(ValueError):
+    """A route's `follows` entry is unusable: it names a route that does not
+    exist, one on a different chart, itself, or a cycle. A FAULT for that route
+    only: it is held and alerted, the other routes still sweep."""
+
+
+def leader_of(name: str, marks: dict) -> str:
+    """Validate `marks[name]['follows']` and return the leader's name, or ""
+    when the route follows nothing. `marks` is the loaded watermark file."""
+    leader = (marks[name].get("follows") or "").strip()
+    if not leader:
+        return ""
+    if leader not in marks:
+        raise RouteInvalid(f"Route {name} follows {leader!r}, which does not exist.")
+    if marks[leader].get("chart") != marks[name].get("chart"):
+        raise RouteInvalid(
+            f"Route {name} follows {leader}, but they are on different charts "
+            f"({marks[name].get('chart')!r} vs {marks[leader].get('chart')!r})."
+        )
+    # walk the chain: a route may not follow itself, directly or indirectly
+    seen, cursor = {name}, leader
+    while cursor:
+        if cursor in seen:
+            raise RouteInvalid(f"Route {name} follows a cycle through {cursor}.")
+        seen.add(cursor)
+        cursor = (marks.get(cursor, {}).get("follows") or "").strip()
+    return leader
+
+
 class Watermark:
     def __init__(self, name: str) -> None:
         self.name = name
@@ -81,6 +110,8 @@ class Watermark:
         self.chart = mark.get("chart") or ""
         self.placing = mark.get("placing", 0)
         self.target = mark.get("target") or ""
+        # optional: the route that must publish a placing before this one may
+        self.follows = leader_of(self.name, watermarks)
 
         self._log_watermark("Loaded watermark")
 

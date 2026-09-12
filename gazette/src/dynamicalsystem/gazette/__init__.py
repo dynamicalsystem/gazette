@@ -5,7 +5,7 @@ from dynamicalsystem.gazette.publish_guard import (
     SweepInProgress,
     sweep_lock,
 )
-from dynamicalsystem.gazette.watermarks import Watermark, watermarks
+from dynamicalsystem.gazette.watermarks import RouteInvalid, Watermark, watermarks
 from dynamicalsystem.gazette.content import ContentProblem, ReviewNotReady
 from dynamicalsystem.gazette.alerts import send_alert
 
@@ -21,7 +21,12 @@ def publish_once(live: bool = False) -> int:
             in the environment.
 
     A target with no written review yet (ReviewNotReady) is held quietly -- that
-    fires every run for every unwritten placing and is not a fault. Anything else
+    fires every run for every unwritten placing and is not a fault. A target
+    whose route `follows` another (a follower behind a leader such as the
+    preview group) is also held quietly whenever its leader, as of the start
+    of this sweep, has not yet published the follower's placing: the leader
+    always gets a placing first, and a follower that has drawn level lets the
+    leader go ahead on the next available turn. Anything else
     -- a corrupt or unavailable chart, an invalid review, a failed send, or an
     unexpected error -- is a FAULT: it is logged loudly, the watermark is held
     (never advanced past a failure), the sweep continues to the other targets,
@@ -59,14 +64,37 @@ def _sweep(live: bool) -> int:
 
     guard = PublishGuard()
     faults = []
+
+    # Placings as they stood before this sweep touched anything. A follower is
+    # compared against its leader's START placing, so the order of routes in
+    # the file cannot let a follower ride a leader's advance in the same sweep.
+    start_placings = {}
     for watermark in marks:
         try:
-            # Check the publish-once guard before doing anything expensive
-            # (e.g., logging into Bluesky). This prevents double posts from
-            # retries, timer misfires, or manual re-runs.
+            start_placings[watermark] = Watermark(watermark).placing
+        except Exception:
+            pass  # reported below, when the route is swept
+
+    for watermark in marks:
+        try:
             preview = Watermark(watermark)
             preview_chart = getattr(preview, "chart", None) or ""
             preview_placing = getattr(preview, "placing", None) or 0
+
+            leader = getattr(preview, "follows", "")
+            if leader:
+                leader_placing = start_placings.get(leader)
+                if leader_placing is None or leader_placing >= preview_placing:
+                    logger.info(
+                        f"Leader {leader} is at {preview_chart}.{leader_placing} "
+                        f"and has not published {preview_placing} yet. "
+                        f"Watermark {watermark} -- waiting for the lead, held."
+                    )
+                    continue
+
+            # Check the publish-once guard before doing anything expensive
+            # (e.g., logging into Bluesky). This prevents double posts from
+            # retries, timer misfires, or manual re-runs.
             if preview_chart and guard.is_published(
                 watermark, preview_chart, preview_placing
             ):
@@ -102,6 +130,11 @@ def _sweep(live: bool) -> int:
             continue
         except ContentProblem as e:
             # corrupt / unavailable chart, or an invalid review -- a real fault
+            logger.error(f"{e} Watermark {watermark} -- FAULT, held.")
+            faults.append(f"{watermark}: {e}")
+            continue
+        except RouteInvalid as e:
+            # a bad `follows` entry -- a config fault for this route only
             logger.error(f"{e} Watermark {watermark} -- FAULT, held.")
             faults.append(f"{watermark}: {e}")
             continue
