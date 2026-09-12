@@ -2,11 +2,11 @@
 loop: abyss-lead-invariant
 product: gazette
 owner: dynamicalsystem
-status: Decide
+status: Act
 parent: null
 blocked-by: []
 worktrees: [abyss-lead-invariant]
-prs: []
+prs: [https://github.com/dynamicalsystem/gazette/pull/7]
 triggers: []
 ---
 
@@ -14,7 +14,7 @@ triggers: []
 
 ## Status
 
-Decide
+Act
 
 **Owner:** dynamicalsystem
 
@@ -228,10 +228,22 @@ Agreed with Simon 2026-09-12:
 
 ## Action
 
-- Branch `abyss-lead-invariant` in worktree `../abyss-lead-invariant`.
-- Steps: `follows` on `Watermark`; sweep captures leader placings at start and
-  holds followers; load-time validation; unit tests; runbook and example file;
-  add `follows` to prod routes on the gateway; deploy image; verify sweep.
+- [x] Branch `abyss-lead-invariant`; `follows` on `Watermark` with `leader_of`
+      validation (`RouteInvalid`); sweep captures start placings and holds
+      followers; nine unit tests; runbook and example updated.
+- [x] PR #7 opened, offline-tests green, merged to main as 78777bd
+      2026-09-12 15:24 UTC; branch deleted.
+- [~] Release workflow run 34702130193 building the image.
+- [ ] Add `"follows": "abyss"` to josh, calendrical_rot and bluesky in the
+      gateway `watermarks.json` (SSH write blocked for Claude by the auto-mode
+      classifier; Simon to run with a backup copy first).
+- [ ] Confirm gateway `podman images` shows the new `:latest` digest.
+- [ ] Dry-run `gazette publish` on the gateway: abyss would post 33, josh
+      logs `waiting for the lead, held`, calendrical_rot 34, bluesky 36.
+- [ ] Verify the 2026-09-13 06:00 UTC sweep in `watermarks.json.log`.
+
+Pre-existing: ten tests in test_content and test_publishers need network
+access and fail identically on main. CI runs the offline set only.
 
 ## Outcomes
 
