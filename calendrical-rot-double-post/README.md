@@ -2,7 +2,7 @@
 loop: calendrical-rot-double-post
 product: gazette
 owner: dynamicalsystem
-status: Act
+status: Closed
 parent: null
 blocked-by: []
 worktrees: []
@@ -14,7 +14,7 @@ triggers: []
 
 ## Status
 
-Act
+Closed
 
 **Owner:** dynamicalsystem
 
