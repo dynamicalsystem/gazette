@@ -29,8 +29,10 @@ gazette stops that from happening. Raised 2026-09-12.
 Two asks came with the signal:
 
 1. Restore the Abyss lead now if the chart has enough written reviews.
-2. Design a fix so prod targets can never draw level with Abyss again, without
-   hardcoding target names into the code.
+2. Design a fix so that, whenever a prod target has drawn level with Abyss,
+   Abyss goes first on the next available turn, without hardcoding target
+   names into the code. Drawing level is acceptable (clarified 2026-09-12);
+   publishing a placing before or alongside Abyss is not.
 
 ## Observations
 
@@ -170,17 +172,20 @@ Consequences:
   restored automatically. This is the "let Abyss pull ahead first" option and
   it is free.
 - **Abyss holds on an unwritten review**: leader stays at P, follower is at
-  P + 1. Tomorrow leader start P < P + 1, follower still posts P + 1 (already
-  previewed). The day after, leader may still be at P and follower at P, so the
-  follower holds. Followers can never draw level. This is the "stop prod
-  drawing level" option, and it falls out of the same rule.
+  P + 1. Tomorrow leader start P < P + 1, so the follower still posts P + 1
+  (already previewed) and draws level at P. That is allowed. When review P
+  lands, the level case above applies: Abyss posts P first, the follower holds
+  that sweep and posts P the day after. A follower can draw level but can never
+  publish a placing before, or on the same sweep as, its leader.
 - **Abyss faulted**: followers stall until it recovers. Correct: prod never
   posts unpreviewed content.
 - **Routes with no `follows`**: behave exactly as today. Abyss itself has no
   `follows`. No code path names any target.
 
-Both of Simon's "two possibilities" are the same rule seen from different
-starting states, so no choice between them is needed.
+Simon's clarified requirement is exactly the level case: drawing level is fine,
+the leader must go ahead on the next available turn. The rule needs no
+"never level" clause, which would have forced followers to hold a day early for
+no preview benefit.
 
 Validation at load: `follows` must name an existing route on the same chart,
 and must not form a cycle. A bad value is a `ContentProblem`-style fault for
@@ -220,7 +225,7 @@ Tests:
 - [ ] No prod target posted an unreviewed or unpreviewed placing as a result
       of the bump (Signal group history checked).
 
-### Outcome 2: The sweep enforces the lead so prod targets cannot draw level
+### Outcome 2: The sweep guarantees Abyss publishes a placing before any prod target does
 
 Tests:
 - [ ] Unit test: leader and follower level, review written: leader publishes,
@@ -228,13 +233,14 @@ Tests:
 - [ ] Unit test: follower one behind leader, both reviews written: both
       publish.
 - [ ] Unit test: leader held on `ReviewNotReady`, follower one behind: follower
-      publishes today, holds tomorrow when it would draw level.
+      publishes today and draws level; when the review lands, the leader
+      publishes and the follower holds that sweep, then publishes the next.
 - [ ] Unit test: `follows` naming a missing route, a route on another chart,
       or forming a cycle is held as a fault and alerted, and other routes still
       sweep.
 - [ ] Unit test: routes without `follows` behave exactly as before.
 - [ ] Runbook updated: the lead is enforced, the manual procedure is for
       recovery only.
-- [ ] Deployed to the gateway with `follows` set on every prod route, and three
-      consecutive scheduled sweeps show the lead preserved in
-      `watermarks.json.log`.
+- [ ] Deployed to the gateway with `follows` set on every prod route, and
+      `watermarks.json.log` over the following week never shows a follower
+      advancing past a placing on or before the sweep its leader did.
