@@ -27,6 +27,7 @@ def _fake_publisher(name, placing, ok=True):
 def _sweep(monkeypatch, marks, publishers, not_ready=()):
     """Run one sweep over `marks` ({name: (placing, follows)}) with the given
     fake publishers. Routes named in `not_ready` raise ReviewNotReady."""
+    from contextlib import nullcontext
     import dynamicalsystem.gazette as gazette
     from dynamicalsystem.gazette.content import ReviewNotReady
 
@@ -42,6 +43,7 @@ def _sweep(monkeypatch, marks, publishers, not_ready=()):
         return publishers[watermark]
 
     alerts = []
+    monkeypatch.setattr(gazette, "sweep_lock", nullcontext)
     monkeypatch.setattr(gazette, "watermarks", lambda: list(marks))
     monkeypatch.setattr(gazette, "Watermark", fake_watermark)
     monkeypatch.setattr(gazette, "create_publisher", fake_create)
@@ -51,7 +53,7 @@ def _sweep(monkeypatch, marks, publishers, not_ready=()):
         "PublishGuard",
         lambda: SimpleNamespace(is_published=lambda *a: False, record=lambda *a: None),
     )
-    rc = gazette.publish_once()
+    rc = gazette.publish_once(live=True)  # dry-runs advance nothing
     return rc, alerts
 
 
@@ -143,6 +145,7 @@ def test_follows_missing_leader_is_a_fault_for_that_route_only(monkeypatch):
     """A follower whose leader failed to load (no start placing) holds as a
     fault-free wait; a RouteInvalid from Watermark() is a fault that alerts,
     and the other routes still sweep."""
+    from contextlib import nullcontext
     import dynamicalsystem.gazette as gazette
     from dynamicalsystem.gazette.watermarks import RouteInvalid
 
@@ -154,6 +157,7 @@ def test_follows_missing_leader_is_a_fault_for_that_route_only(monkeypatch):
         return SimpleNamespace(name=name, chart="tQ26.H", placing=36, follows="")
 
     alerts = []
+    monkeypatch.setattr(gazette, "sweep_lock", nullcontext)
     monkeypatch.setattr(gazette, "watermarks", lambda: ["bad", "good"])
     monkeypatch.setattr(gazette, "Watermark", fake_watermark)
     monkeypatch.setattr(gazette, "create_publisher", lambda watermark, live=False: good)
@@ -163,7 +167,7 @@ def test_follows_missing_leader_is_a_fault_for_that_route_only(monkeypatch):
         "PublishGuard",
         lambda: SimpleNamespace(is_published=lambda *a: False, record=lambda *a: None),
     )
-    rc = gazette.publish_once()
+    rc = gazette.publish_once(live=True)
     assert rc == 1
     assert good.updated is True
     assert len(alerts) == 1 and "bad" in alerts[0] and "ghost" in alerts[0]

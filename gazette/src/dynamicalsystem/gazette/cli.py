@@ -3,8 +3,9 @@
     gazette publish [--live]   -- run one publish sweep and exit (batch / timer / tests)
     gazette serve              -- run the long-lived FastAPI + uvicorn web service
 
-`publish` defaults to Validator/dry-run. Live publishers are enabled only with
-`--live` AND `GAZETTE_LIVE=1` in the environment. `serve` does not publish and
+`publish` defaults to Validator/dry-run, which logs what would be published
+and advances nothing. Live publishers are enabled only with `--live` AND
+`GAZETTE_LIVE=1` in the environment. `serve` does not publish and
 has no opt-in.
 
 `publish` calls the library directly and never imports the web stack; `serve`'s

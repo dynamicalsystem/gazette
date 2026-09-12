@@ -21,5 +21,6 @@ defined in the private `tinsnip` repo (`hosts/gateway/gazette.container`) and
 pulled by `podman auto-update`. Config is an on-box `EnvironmentFile`; watermark
 state is a mounted volume. See tinsnip for the box-side wiring.
 
-Local dry-runs use the `Validator` publisher and never touch the prod Signal
-identity -- see `ooda/` for the config and run model.
+Dry-runs (`gazette publish` without `--live`) use the `Validator` publisher,
+never touch the prod Signal identity, and never change the watermark state --
+see `docs/runbooks/prod-publishing.md` for the run model.

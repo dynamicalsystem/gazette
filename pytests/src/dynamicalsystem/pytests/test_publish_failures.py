@@ -91,6 +91,7 @@ def _fake_publisher(name, ok):
 def test_not_ready_is_quiet_and_run_stays_clean(monkeypatch):
     """A not-ready target and a successful target: the run is clean (rc 0), no
     alert, the good target advances, the not-ready one is untouched."""
+    from contextlib import nullcontext
     import dynamicalsystem.gazette as gazette
     from dynamicalsystem.gazette.content import ReviewNotReady
 
@@ -105,8 +106,9 @@ def test_not_ready_is_quiet_and_run_stays_clean(monkeypatch):
     monkeypatch.setattr(gazette, "watermarks", lambda: ["notready", "good"])
     monkeypatch.setattr(gazette, "create_publisher", fake_create)
     monkeypatch.setattr(gazette, "send_alert", lambda msg: alerts.append(msg))
+    monkeypatch.setattr(gazette, "sweep_lock", nullcontext)
 
-    rc = gazette.publish_once()
+    rc = gazette.publish_once(live=True)  # only live sweeps advance
 
     assert rc == 0
     assert good.updated is True
@@ -117,6 +119,7 @@ def test_faults_are_loud_hold_and_do_not_abort(monkeypatch):
     """A corrupt chart and a failed send are both faults: the sweep continues to
     the good target (which advances), neither faulted watermark is decremented,
     exactly one alert is sent, and rc is non-zero."""
+    from contextlib import nullcontext
     import dynamicalsystem.gazette as gazette
     from dynamicalsystem.gazette.content import ChartCorrupt
 
@@ -133,8 +136,9 @@ def test_faults_are_loud_hold_and_do_not_abort(monkeypatch):
     monkeypatch.setattr(gazette, "watermarks", lambda: ["corrupt", "failer", "good"])
     monkeypatch.setattr(gazette, "create_publisher", fake_create)
     monkeypatch.setattr(gazette, "send_alert", lambda msg: alerts.append(msg))
+    monkeypatch.setattr(gazette, "sweep_lock", nullcontext)
 
-    rc = gazette.publish_once()
+    rc = gazette.publish_once(live=True)  # only live sweeps advance
 
     assert rc == 1                    # loud: the run failed
     assert good.updated is True       # reached and advanced the later target

@@ -16,9 +16,10 @@ def publish_once(live: bool = False) -> int:
 
     Args:
         live: If False (default), every target is run through the Validator
-            publisher -- a dry-run that logs what would be published. If True,
-            real publishers are used, but only if `GAZETTE_LIVE=1` is also set
-            in the environment.
+            publisher -- a dry-run that logs what would be published and what
+            would advance, and changes nothing in the data folder (no watermark
+            update, no guard record, no lock). If True, real publishers are
+            used, but only if `GAZETTE_LIVE=1` is also set in the environment.
 
     A target with no written review yet (ReviewNotReady) is held quietly -- that
     fires every run for every unwritten placing and is not a fault. A target
@@ -113,7 +114,14 @@ def _sweep(live: bool) -> int:
                 )
                 if live:
                     guard.record(watermark, publisher.chart, publisher.placing)
-                publisher.watermark.update()
+                    publisher.watermark.update()
+                else:
+                    # dry-run: touch nothing in the data folder, so the same
+                    # command can be run any number of times as a pre-flight
+                    logger.info(
+                        f"Dry-run - would advance {publisher.watermark.name} "
+                        f"past {publisher.chart}.{publisher.placing}."
+                    )
             else:
                 logger.error(
                     f"Publish failed - {publisher.chart}.{publisher.placing} "
