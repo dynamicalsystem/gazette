@@ -91,16 +91,35 @@ Reviews 36 and 35 were both committed AFTER the 07:00 London sweep on their
 day. Each of those days is a sweep where Abyss would hold on an unwritten
 placing while prod posted the placing behind it.
 
-### Open item: prod watermark state
+### Prod watermark state (gateway, read 2026-09-12 ~12:00 UTC)
 
-SSH to the gateway was refused by the session's permission classifier, so the
-live state is unread. Command to run from the host shell:
+All four routes are on chart tQ26.H. Sweep runs at 06:00 UTC (07:00 London).
 
-```bash
-ssh -i ~/.ssh/id_oci ubuntu@152.67.153.4 'D=/home/ubuntu/.local/state/dynamicalsystem/gazette; cat $D/watermarks.json; echo; tail -n 20 $D/watermarks.json.log'
-```
+| Route | Publisher | Placing | Gap behind Abyss |
+|---|---|---|---|
+| abyss | Signal group | 33 | leader |
+| josh | Signal number | 33 | 0 (level) |
+| calendrical_rot | Signal group | 34 | 1 |
+| bluesky | Bluesky | 36 | 3 |
 
-Record here: the placing of every route, and the log lines since 2026-09-05.
+`watermarks.json.log`, 2026-09-01 to 2026-09-12, abyss and josh only:
+
+| Sweep (UTC) | abyss | josh |
+|---|---|---|
+| 09-01 to 09-04 | 43 -> 39, one per day | 44 -> 40, one per day (gap 1) |
+| 09-05 | held at 39 (no log line) | 40 -> 39 (level) |
+| 09-06 to 09-11 | 39 -> 33, one per day | 39 -> 33, one per day (level) |
+| 09-12 | held at 33 | held at 33 |
+
+Today's journal (`journalctl --user -u gazette-publish`): abyss and josh both
+logged `Review tQ26.H.33 not written yet ... not ready, held`; bluesky posted
+37 and calendrical_rot posted 35. Exit was clean, no fault, no alert. Image
+revision running is 5b7c2c7.
+
+Josh has received every placing from 39 to 34 on the same sweep as Abyss, six
+days running. Review 33 was committed at 09:13 UTC today, after the sweep, so
+tomorrow's sweep will post 33 to Abyss and Josh together unless something
+changes before 06:00 UTC.
 
 ## Orientation
 
@@ -112,26 +131,17 @@ is preserved. The first day a review is late, Abyss holds and the followers do
 not, so the offset collapses to zero. Once level, the offset never recovers:
 every later sweep advances all targets together.
 
-Reconstructed timeline (assumes Abyss started 2026-09-06 at 37 and prod at 38;
-prod state will confirm or correct):
-
-| Sweep (07:00 London) | Review state | Abyss | Prod |
-|---|---|---|---|
-| 09-06 | 37 written | posts 37, now 36 | posts 38, now 37 |
-| 09-07 | 36 not yet written (16:53) | holds at 36 | posts 37, now 36 |
-| 09-08 | 36 written | posts 36, now 35 | posts 36, now 35 |
-| 09-09 | 35 not yet written (08:00) | holds at 35 | holds at 35 |
-| 09-10 | 35 written | posts 35, now 34 | posts 35, now 34 |
-| 09-11, 09-12 | 34 state unknown | | |
-
-From 09-07 onward prod posted content the same day Abyss did, or a day before
-Abyss could hold it back. The preview window was zero.
+The log shows exactly this. Abyss held at 39 on 2026-09-05 (review 39 not
+written by 06:00 UTC). Josh posted 40 that morning and landed on 39, level.
+From 09-06 both advanced together every day. The preview window for Josh has
+been zero for a week. calendrical_rot and bluesky kept their gaps only because
+they happened not to be one behind Abyss when it held.
 
 ### Headroom for a manual bump
 
-Reviews are `ok` down to placing 31. If the targets are level at 34 or 35,
-decrementing Abyss by one gives it a lead with two or three written placings
-still ahead of it, so it will not immediately hold again.
+Reviews are `ok` down to placing 31. Abyss and Josh are level at 33. Moving
+Abyss to 32 gives it a lead of one with reviews 32 and 31 still ahead of it,
+so it posts for two more days before holding at 30.
 
 Two ways to "bump":
 
@@ -141,8 +151,13 @@ Two ways to "bump":
   the lead honestly, but there is no single-target publish in the CLI today. A
   full manual sweep would also advance prod and defeat the purpose.
 
-The skip costs one unpreviewed placing. The post costs a small CLI feature
+The skip costs one unpreviewed placing (33). The post costs a small CLI feature
 (`gazette publish --only <route>`), which the fix below also benefits from.
+
+There is a third way. The `follows` rule below self-heals the level case: if
+it is deployed before tomorrow's 06:00 UTC sweep, Abyss posts 33 and Josh holds,
+with no manual bump and no skipped placing. The bump is only needed as a
+fallback if the fix cannot ship in time.
 
 ### Design: a data-declared leader
 
@@ -202,11 +217,14 @@ Alternatives rejected:
 
 ## Decision
 
-Pending. Proposed, awaiting Simon's call on:
+Pending. Proposed, awaiting Simon's call:
 
-1. Bump method now: skip (runbook) or post (needs `--only`).
-2. Adopt the `follows` rule above as the invariant.
-3. Whether `--only <route>` is in scope for this loop or a backlog item.
+1. Implement the `follows` rule, deploy today, and let tomorrow's sweep restore
+   the lead by itself. No manual bump, no skipped placing.
+2. Fallback if the image is not on the gateway by 2026-09-13 05:30 UTC: skip
+   Abyss from 33 to 32 with the runbook procedure, and restore from `.bak` if
+   anything looks wrong.
+3. `--only <route>` goes to the backlog. It is not needed for either path.
 
 ## Action
 
