@@ -242,6 +242,10 @@ Agreed with Simon 2026-09-12:
       34, and josh logged `Leader abyss is at tQ26.H.33 and has not published
       33 yet ... waiting for the lead, held`. Live placings unchanged
       (33/36/34/33).
+- [x] 16:04 UTC: second dry-run on the gateway with image dd3c353 (which also
+      carries the dry-run-no-advance fix), this time against the live data
+      folder: same result, files untouched. The 06:00 UTC sweep will run this
+      image.
 - [ ] Verify the 2026-09-13 06:00 UTC sweep in `watermarks.json.log`.
 
 Pre-existing: ten tests in test_content and test_publishers need network

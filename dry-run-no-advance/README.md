@@ -2,7 +2,7 @@
 loop: dry-run-no-advance
 product: gazette
 owner: dynamicalsystem
-status: Act
+status: Closed
 parent: null
 blocked-by: []
 worktrees: [dry-run-no-advance]
@@ -10,11 +10,11 @@ prs: [https://github.com/dynamicalsystem/gazette/pull/8]
 triggers: []
 ---
 
-# Dry-run must not advance watermarks
+# [ARCHIVED] Dry-run must not advance watermarks
 
 ## Status
 
-Act
+Closed
 
 **Owner:** dynamicalsystem
 
@@ -76,10 +76,12 @@ touches nothing in the data folder. No change to `Validator`.
       runbook aligned; four tests in test_dry_run.py; existing
       advancement tests switched to live sweeps with the lock patched.
 - [x] PR #8 opened.
-- [ ] CI green, merge, image built and pulled by the gateway.
-- [ ] Dry-run inside the gazette container on the gateway against the live
-      data folder; confirm the three watermark files are byte-identical
-      before and after.
+- [x] CI green; merged as dd3c353 2026-09-12; release run 34703865915; gateway
+      auto-update pulled image 9ae3d0e8f8b7 at 16:02 UTC.
+- [x] 16:04 UTC: dry-run of the new image on the gateway, first against a
+      copy (unchanged), then against the live data folder. sha256 of
+      watermarks.json, .bak and .log identical before and after. Log shows
+      `would advance` for abyss/bluesky/calendrical_rot and josh held.
 
 ## Outcomes
 
@@ -91,9 +93,9 @@ Tests:
 - [x] Unit test: `publish_once(live=True)` still updates the watermark.
 - [x] Unit test: a live route whose configured publisher is `Validator`
       advances in live mode.
-- [ ] Dry-run of the deployed image on the gateway against the LIVE data
+- [x] Dry-run of the deployed image on the gateway against the LIVE data
       folder: `watermarks.json`, `.bak` and `.log` are byte-identical before
-      and after.
+      and after (2026-09-12 16:04 UTC).
 
 ### Outcome 2: Operators can trust the runbook's dry-run instructions
 
