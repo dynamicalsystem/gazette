@@ -10,8 +10,10 @@ gazette publish
 ```
 
 Runs every configured watermark through the `Validator` publisher. It logs what
-would be published but does not post to Signal, Bluesky, or any other live
-target. This is the safe way to validate the current state.
+would be published and which watermarks would advance, but does not post to
+Signal, Bluesky, or any other live target, and does not change `watermarks.json`,
+its backup, its log, or the publish guard. It can be run as often as you like,
+including inside the gazette container on the gateway.
 
 ## Live prod publishing
 
