@@ -10,4 +10,7 @@ Cross-loop triggers and observations that outlive their owning loops.
 
 ## Observations
 
-- (none)
+- 2026-09-12 gazette: a `gazette publish --only <route>` flag would let a
+  manual run post to one route (e.g. Abyss) without touching the others. Raised
+  in abyss-lead-invariant as a way to restore a lead by posting rather than
+  skipping. Not needed while the follows rule self-heals.

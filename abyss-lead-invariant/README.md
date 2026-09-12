@@ -2,10 +2,10 @@
 loop: abyss-lead-invariant
 product: gazette
 owner: dynamicalsystem
-status: Orient
+status: Decide
 parent: null
 blocked-by: []
-worktrees: []
+worktrees: [abyss-lead-invariant]
 prs: []
 triggers: []
 ---
@@ -14,7 +14,7 @@ triggers: []
 
 ## Status
 
-Orient
+Decide
 
 **Owner:** dynamicalsystem
 
@@ -217,18 +217,21 @@ Alternatives rejected:
 
 ## Decision
 
-Pending. Proposed, awaiting Simon's call:
+Agreed with Simon 2026-09-12:
 
-1. Implement the `follows` rule, deploy today, and let tomorrow's sweep restore
-   the lead by itself. No manual bump, no skipped placing.
-2. Fallback if the image is not on the gateway by 2026-09-13 05:30 UTC: skip
-   Abyss from 33 to 32 with the runbook procedure, and restore from `.bak` if
-   anything looks wrong.
-3. `--only <route>` goes to the backlog. It is not needed for either path.
+1. Implement the `follows` rule from the Orientation and deploy before the
+   2026-09-13 06:00 UTC sweep, so Abyss posts 33 and Josh holds. The invariant
+   restores the lead by itself; no manual bump.
+2. Fallback: if the image is not on the gateway by 05:30 UTC, skip Abyss from
+   33 to 32 with the runbook procedure.
+3. A single-route publish flag is out of scope; recorded in the backlog.
 
 ## Action
 
-Not started.
+- Branch `abyss-lead-invariant` in worktree `../abyss-lead-invariant`.
+- Steps: `follows` on `Watermark`; sweep captures leader placings at start and
+  holds followers; load-time validation; unit tests; runbook and example file;
+  add `follows` to prod routes on the gateway; deploy image; verify sweep.
 
 ## Outcomes
 
