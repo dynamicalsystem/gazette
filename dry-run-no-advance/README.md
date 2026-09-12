@@ -2,11 +2,11 @@
 loop: dry-run-no-advance
 product: gazette
 owner: dynamicalsystem
-status: Decide
+status: Act
 parent: null
 blocked-by: []
 worktrees: [dry-run-no-advance]
-prs: []
+prs: [https://github.com/dynamicalsystem/gazette/pull/8]
 triggers: []
 ---
 
@@ -14,7 +14,7 @@ triggers: []
 
 ## Status
 
-Decide
+Act
 
 **Owner:** dynamicalsystem
 
@@ -71,17 +71,25 @@ touches nothing in the data folder. No change to `Validator`.
 
 ## Action
 
-- Branch `dry-run-no-advance`, worktree `../dry-run-no-advance`.
+- [x] Branch `dry-run-no-advance`: watermark update gated on `live` in
+      `_sweep`; dry-run logs `would advance`; CLI docstring, README and
+      runbook aligned; four tests in test_dry_run.py; existing
+      advancement tests switched to live sweeps with the lock patched.
+- [x] PR #8 opened.
+- [ ] CI green, merge, image built and pulled by the gateway.
+- [ ] Dry-run inside the gazette container on the gateway against the live
+      data folder; confirm the three watermark files are byte-identical
+      before and after.
 
 ## Outcomes
 
 ### Outcome 1: A dry-run against the live data folder leaves it untouched
 
 Tests:
-- [ ] Unit test: `publish_once()` (dry-run) with a successful Validator publish
+- [x] Unit test: `publish_once()` (dry-run) with a successful Validator publish
       does not call `watermark.update()` and logs a "would advance" line.
-- [ ] Unit test: `publish_once(live=True)` still updates the watermark.
-- [ ] Unit test: a live route whose configured publisher is `Validator`
+- [x] Unit test: `publish_once(live=True)` still updates the watermark.
+- [x] Unit test: a live route whose configured publisher is `Validator`
       advances in live mode.
 - [ ] Dry-run of the deployed image on the gateway against the LIVE data
       folder: `watermarks.json`, `.bak` and `.log` are byte-identical before
@@ -90,6 +98,6 @@ Tests:
 ### Outcome 2: Operators can trust the runbook's dry-run instructions
 
 Tests:
-- [ ] Runbook, README and CLI docstring state that a dry-run does not change
+- [x] Runbook, README and CLI docstring state that a dry-run does not change
       the data folder, and the runbook's pre-flight steps are correct as
       written.
