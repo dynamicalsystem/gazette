@@ -9,12 +9,14 @@
         "publisher": "Signal",
         "chart": "tQ00.X",
         "placing": 100,
-        "target": "group.REPLACE_WITH_REAL_SIGNAL_GROUP_ID="
+        "target": "group.REPLACE_WITH_REAL_SIGNAL_GROUP_ID=",
+        "follows": "example_validator_route"
     },
     "example_bluesky_route": {
         "publisher": "Bluesky",
         "chart": "tQ00.X",
         "placing": 100,
-        "target": "prod"
+        "target": "prod",
+        "follows": "example_validator_route"
     }
 }

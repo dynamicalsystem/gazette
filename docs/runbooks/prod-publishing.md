@@ -48,10 +48,29 @@ Live prod access is permitted only when all of these are true:
 Never use prod as a test environment. If a fix cannot be validated offline,
 use a non-prod target or obtain explicit human approval before posting live.
 
+## Leader and follower routes
+
+A route may declare `"follows": "<route>"` in `watermarks.json`. A follower
+publishes a placing only if its leader's placing, as it stood at the start of
+the sweep, is strictly less than the follower's. In practice:
+
+- The leader (Abyss) always posts a placing at least one sweep before any
+  follower.
+- If the leader is held on an unwritten review, a follower may draw level with
+  it. That is allowed.
+- When level, the leader posts first and the follower holds for that sweep,
+  then posts the next day. The one-day lead restores itself.
+- A follower whose leader is missing, on another chart, or part of a cycle is
+  held as a fault and alerted. Other routes still sweep.
+
+The sweep logs `waiting for the lead, held` for a follower that is holding.
+Routes without `follows` behave independently, as before.
+
 ## Advancing or resetting a watermark
 
-To move a watermark forward by one placing (e.g., to restore Abyss's one-day
-lead):
+Manual advancement is for recovery only (e.g., a placing already delivered by
+hand). The leader/follower rule keeps the lead on its own. To move a watermark
+forward by one placing:
 
 ```bash
 podman exec -ti gazette python - <<'PY'
