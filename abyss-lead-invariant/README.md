@@ -2,7 +2,7 @@
 loop: abyss-lead-invariant
 product: gazette
 owner: dynamicalsystem
-status: Act
+status: Closed
 parent: null
 blocked-by: []
 worktrees: [abyss-lead-invariant]
@@ -10,11 +10,11 @@ prs: [https://github.com/dynamicalsystem/gazette/pull/7]
 triggers: []
 ---
 
-# Abyss lead invariant
+# [ARCHIVED] Abyss lead invariant
 
 ## Status
 
-Act
+Closed
 
 **Owner:** dynamicalsystem
 
@@ -246,7 +246,15 @@ Agreed with Simon 2026-09-12:
       carries the dry-run-no-advance fix), this time against the live data
       folder: same result, files untouched. The 06:00 UTC sweep will run this
       image.
-- [ ] Verify the 2026-09-13 06:00 UTC sweep in `watermarks.json.log`.
+- [x] 2026-09-13 06:00 UTC sweep verified in `watermarks.json.log` and the
+      journal: abyss posted 33 and moved to 32; josh logged `Leader abyss is
+      at tQ26.H.33 and has not published 33 yet ... waiting for the lead,
+      held`. On 09-14 josh posted 33 with abyss already at 32. The lead
+      restored itself; the fallback skip was never needed.
+- [x] 2026-09-26: fourteen sweeps (09-13 to 09-26) replayed from the log
+      against the rule "follower publishes P only if leader start < P": zero
+      violations, one hold (josh, 09-13). Placings now abyss 19, josh 20,
+      calendrical_rot 20, bluesky 22.
 
 Pre-existing: ten tests in test_content and test_publishers need network
 access and fail identically on main. CI runs the offline set only.
@@ -262,14 +270,17 @@ data folder for that reason. Recorded in the backlog; not fixed in this loop.
 ### Outcome 1: Abyss leads every prod target on tQ26.H again
 
 Tests:
-- [ ] Prod `watermarks.json` shows abyss placing strictly less than every
-      other route on tQ26.H.
-- [ ] `watermarks.json.log` records the manual change with a timestamp.
+- [x] Prod `watermarks.json` shows abyss placing strictly less than every
+      other route on tQ26.H (2026-09-26: 19 vs 20, 20, 22).
+- [~] `watermarks.json.log` records the manual change with a timestamp.
+      Abandoned: no manual change was made. The follows rule shipped before
+      the 09-13 sweep and restored the lead by itself (Decision point 1).
 - [x] A dry-run `gazette publish` on the gateway (against a copy of the data
       folder) shows Abyss and prod would each publish a different placing on
       the next sweep, and josh holds.
-- [ ] No prod target posted an unreviewed or unpreviewed placing as a result
-      of the bump (Signal group history checked).
+- [x] No prod target posted an unreviewed or unpreviewed placing. No bump
+      occurred; the log replay above shows every follower placing was posted
+      by abyss on an earlier sweep.
 
 ### Outcome 2: The sweep guarantees Abyss publishes a placing before any prod target does
 
@@ -287,6 +298,7 @@ Tests:
 - [x] Unit test: routes without `follows` behave exactly as before.
 - [x] Runbook updated: the lead is enforced, the manual procedure is for
       recovery only.
-- [ ] Deployed to the gateway with `follows` set on every prod route, and
-      `watermarks.json.log` over the following week never shows a follower
-      advancing past a placing on or before the sweep its leader did.
+- [x] Deployed to the gateway with `follows` set on every prod route, and
+      `watermarks.json.log` over the following two weeks (14 sweeps) never
+      shows a follower advancing past a placing on or before the sweep its
+      leader did.

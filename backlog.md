@@ -14,3 +14,7 @@ Cross-loop triggers and observations that outlive their owning loops.
   manual run post to one route (e.g. Abyss) without touching the others. Raised
   in abyss-lead-invariant as a way to restore a lead by posting rather than
   skipping. Not needed while the follows rule self-heals.
+- 2026-09-26 gazette: each sweep logs `Loaded watermark - abyss` three extra
+  times, once per follower, so the follows rule re-reads the leader from disk
+  for every follower. Harmless at four routes; worth a single read per sweep
+  if routes multiply. Seen closing abyss-lead-invariant.
